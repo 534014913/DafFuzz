@@ -1,0 +1,4 @@
+package ast
+
+class ASTNode {
+}

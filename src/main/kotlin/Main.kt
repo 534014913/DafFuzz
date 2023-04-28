@@ -1,13 +1,33 @@
+import antlr.DafnyLexer
+import antlr.DafnyParser
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import java.io.File
+import java.io.FileInputStream
+import kotlin.system.exitProcess
+
 fun main(args: Array<String>) {
-    println("Hello World!")
+    val programName: String = args[0];
+    println(programName)
 
-    // Try adding program arguments via Run/Debug configuration.
-    // Learn more about running applications: https://www.jetbrains.com/help/idea/running-applications.html.
-    println("Program arguments: ${args.joinToString()}")
-    println("Hello World")
-    println("Hello")
-}
+    val inFile: File = File(programName)
+    if (!inFile.exists()) {
+        println("File not fund");
+        exitProcess(1);
+    }
 
-fun Sum(a: Int, b: Int): Int {
-    return a + b
+    val streamedInFile = FileInputStream(inFile);
+    val input = CharStreams.fromStream(streamedInFile)
+    streamedInFile.close();
+
+    val lexer = DafnyLexer(input)
+    val tokens = CommonTokenStream(lexer)
+    val parser = DafnyParser(tokens)
+
+    val parserTree = parser.dafny()
+    if (parser.numberOfSyntaxErrors > 0) {
+        println("Lexer/Parser error in the input file")
+        exitProcess(1)
+    }
+
 }
