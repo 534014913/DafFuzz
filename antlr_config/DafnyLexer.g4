@@ -48,7 +48,10 @@ BVOR: '|';
 BVXOR: '^';
 COLON: ':';
 COMMA: ',';
+IN: 'in';
 NOTIN: '!in';
+ARROW: '->';
+DISJOINT: '!!';
 NOT: '!';
 SEMICOLON: ';';
 OPENPAREN: '(';
@@ -86,6 +89,7 @@ PRINT: 'print';
 FALSE: 'false';
 TRUE: 'true';
 NULL: 'null';
+ESCAPED_DBLQUOTE: '\\"';
 QUOTE: '\'';
 DBLQUOTE: '"';
 CH_QUOTE: '\\\'';
@@ -106,7 +110,7 @@ SPECIAL: QUOTE | '_' | '?';
 IDENT: IDCHAR (IDCHAR)*;
 
 CharChar: ~('\r' | '\\' | '\'' | '\n');
-STRINGCHAR: ~('\r' | '"' | '\n');
+STRINGCHAR: (~('\r' | '"' | '\n') | ESCAPED_DBLQUOTE);
 
 
 

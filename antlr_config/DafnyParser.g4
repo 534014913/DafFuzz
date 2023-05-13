@@ -20,7 +20,7 @@ methodDecl: methodKeyWord (methodFunctionName)? (methodSignature) methodSpec (bl
 
 methodSpec: (requiresClause | ensuresClause)*;
 
-requiresClause: REQUIRES (OPENPAREN)?(attribute)* (labelName COLON)? expression CLOSEPAREN?;
+requiresClause: REQUIRES (OPENPAREN)? (attribute)* (labelName COLON)? expression CLOSEPAREN?;
 
 ensuresClause: ENSURES (OPENPAREN)? (attribute)* expression (CLOSEPAREN)?;
 
@@ -102,7 +102,11 @@ dotSuffix: (ident | DIGITS);
 expressions: expression (COMMA expression)*;
 
 // expression
-expression: equivExpression (SEMICOLON expression)?;
+//expression: equivExpression (SEMICOLON expression)?;
+
+//expression: equivExpression (SEMICOLON expression)?;
+expression: equivExpression;
+//expression: impliesExpression (SEMICOLON expression)?;
 
 equivExpression: impliesExpliesExpression (EQUIVOP impliesExpliesExpression)*;
 
@@ -113,27 +117,32 @@ impliesExpression: logicalExpression (IMPLIESOP impliesExpression)?;
 
 logicalExpression: (ANDOP | OROP)? relationalExpression ((ANDOP | OROP) relationalExpression)*;
 
-relationalExpression: shiftTerm (relOp shiftTerm)*;
+//relationalExpression: shiftTerm (relOp shiftTerm)*;
+relationalExpression: term (relOp term)*;
 
-relOp: (EQ | NOTEQ | LESS | LESSEQ | GREATER | GREATEREQ | NOTIN);
+relOp: (EQ | NOTEQ | LESS | LESSEQ | GREATER | GREATEREQ | NOTIN | IN | DISJOINT);
 
 //shiftTerm: term (shiftOp term)*;
 
-shiftTerm: term (term)*;
+//shiftTerm: term (term)*;
 
 //shiftOp: (LEFTSHIFT | RIGHTSHIFT);
 
-term: factor (addOp factor)*;
+//term: factor (addOp factor)*;
+//
+//addOp: (ADD | SUB);
+//
+//factor: bitvectorFactor (mulOp bitvectorFactor)*;
+//
+//mulOp: (MUL | DIV | MOD);
+//
+//bitvectorFactor: asExpression (bvOp asExpression)*;
+//
+//bvOp: (BVAND | BVOR | BVXOR);
 
-addOp: (ADD | SUB);
+term: asExpression (binaryOp asExpression)*;
 
-factor: bitvectorFactor (mulOp bitvectorFactor)*;
-
-mulOp: (MUL | DIV | MOD);
-
-bitvectorFactor: asExpression (bvOp asExpression)*;
-
-bvOp: (BVAND | BVOR | BVXOR);
+binaryOp: (ADD | SUB | MUL | DIV | MOD | BVAND | BVOR | BVXOR);
 
 asExpression: unaryExpression ((ASOP | ISOP) type)*;
 
@@ -163,11 +172,15 @@ endlessExpression: letExpression | ifExpression;
 
 ifExpression: IF expression THEN expression ELSE expression;
 
+//letExpression: (
+//    VAR casePattern (COMMA casePattern)* GETS expression (COMMA expression)*
+//) SEMICOLON expression;
+
 letExpression: (
-    VAR casePattern (COMMA casePattern)* GETS expression (COMMA expression)*
+    VAR localIdentTypeOptional (COMMA localIdentTypeOptional)* GETS expression (COMMA expression)*
 ) SEMICOLON expression;
 
-casePattern: identType;
+//casePattern: localIdentTypeOptional;
 
 constAtomExpression: literalExpression | parensExpression | cardinalityExpression;
 
@@ -201,9 +214,11 @@ identType: wildIdent COLON type;
 
 localIdentTypeOptional: wildIdent (COLON type)?;
 
-type: domainType;
+type: domainType | arrowType;
 
 domainType: (BOOL | INT | CHAR | STRING | NAT| sequenceType | setType | multisetType | T | tupleType);
+
+arrowType: domainType ARROW type;
 
 sequenceType: SEQ (genericInstantiation)?;
 
