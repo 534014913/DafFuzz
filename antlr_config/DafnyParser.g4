@@ -8,21 +8,21 @@ options {
 // EOF indicates that the program must consume to the end of the input.
 dafny: (includeDirective)* (topDecl)* EOF;
 
-includeDirective: INCLUDE stringToken;
+includeDirective: INCLUDE StringToken;
 
 topDecl: (declModifier)* (classMemberDecl);
 
 declModifier: (ABSTRACT | GHOST | STATIC | OPAQUE);
 
-classMemberDecl: methodDecl;
+classMemberDecl: methodDecl | functionDeclaration;
 
 methodDecl: methodKeyWord (methodFunctionName)? (methodSignature) methodSpec (blockStmt)?;
 
 methodSpec: (requiresClause | ensuresClause)*;
 
-requiresClause: REQUIRES (attribute)* (labelName COLON)? expression;
+requiresClause: REQUIRES (OPENPAREN)?(attribute)* (labelName COLON)? expression CLOSEPAREN?;
 
-ensuresClause: ENSURES (attribute)* expression;
+ensuresClause: ENSURES (OPENPAREN)? (attribute)* expression (CLOSEPAREN)?;
 
 attribute: LBRACECOLON attributeName (expression)? RBRACE;
 
@@ -32,17 +32,38 @@ methodSignature: formals (RETURNS formals)?;
 
 formals: OPENPAREN (gIdentType (COMMA gIdentType)*)? CLOSEPAREN;
 
+functionDeclaration: FUNCTION (METHOD)? methodFunctionName functionSignature functionSpec (functionBody)?;
+
+functionSignature: (genericParameters)?formals COLON (type | OPENPAREN gIdentType CLOSEPAREN);
+
+genericParameters: LESS T GREATER;
+
+functionSpec: (requiresClause | ensuresClause)*;
+
+functionBody: LBRACE expression RBRACE;
+
 // Statements
 blockStmt: LBRACE (stmt)* RBRACE;
 
 stmt: nonLabeledStmt;
 
 nonLabeledStmt: (blockStmt
+    | ifStmt
     | varDeclStmt
     | updateStmt
+    | assertStmt
     | printStmt
     | returnStmt
     );
+
+assertStmt: ASSERT expression SEMICOLON;
+
+ifStmt: IF (guard) blockStmt (elseSubStmt)?;
+
+//elseSubStmt: ELSE (ifStmt | blockStmt);
+elseSubStmt: ELSE (blockStmt);
+
+guard: (expression);
 
 updateStmt: lhs ((COMMA lhs)* (GETS rhs (COMMA rhs)*)) SEMICOLON;
 
@@ -57,11 +78,26 @@ lhs: (nameSegment (suffix)* | constAtomExpression suffix (suffix)*);
 
 rhs: expression;
 
-suffix: selectionSuffix | argumentListSuffix;
+suffix: selectionSuffix
+    | argumentListSuffix
+    | augmentedDotSuffix
+    | subsequenceSuffix
+    | sequenceUpdateSuffix
+    | sliceByLengthSuffix;
+
+sliceByLengthSuffix: LBRACKET expression COLON (expression (COLON expression)* (COLON)?)? RBRACKET;
+
+subsequenceSuffix: LBRACKET (expression)? TWODOT (expression)? RBRACKET;
+
+sequenceUpdateSuffix: LBRACKET expression GETS expression RBRACKET;
 
 selectionSuffix: LBRACKET expression (COMMA expression)* RBRACKET;
 
 argumentListSuffix: OPENPAREN (expressions)? CLOSEPAREN;
+
+augmentedDotSuffix: DOT dotSuffix;
+
+dotSuffix: (ident | DIGITS);
 
 expressions: expression (COMMA expression)*;
 
@@ -75,15 +111,17 @@ impliesExpliesExpression: logicalExpression (IMPLIESOP impliesExpression
 
 impliesExpression: logicalExpression (IMPLIESOP impliesExpression)?;
 
-logicalExpression:(ANDOP | OROP)? relationalExpression ((ANDOP | OROP) relationalExpression)*;
+logicalExpression: (ANDOP | OROP)? relationalExpression ((ANDOP | OROP) relationalExpression)*;
 
 relationalExpression: shiftTerm (relOp shiftTerm)*;
 
-relOp: (EQ | NOTEQ | LESS | LESSEQ | GREATER | GREATEREQ);
+relOp: (EQ | NOTEQ | LESS | LESSEQ | GREATER | GREATEREQ | NOTIN);
 
-shiftTerm: term (shiftOp term)*;
+//shiftTerm: term (shiftOp term)*;
 
-shiftOp: (LEFTSHIFT | RIGHTSHIFT);
+shiftTerm: term (term)*;
+
+//shiftOp: (LEFTSHIFT | RIGHTSHIFT);
 
 term: factor (addOp factor)*;
 
@@ -97,28 +135,64 @@ bitvectorFactor: asExpression (bvOp asExpression)*;
 
 bvOp: (BVAND | BVOR | BVXOR);
 
-asExpression: unaryExpression;
+asExpression: unaryExpression ((ASOP | ISOP) type)*;
 
 unaryExpression: (SUB unaryExpression | NOT unaryExpression | primaryExpression);
 
-primaryExpression: nameSegment (suffix)*
+setDisplayExpression: ((MULTISET)? LBRACE (expressions)? RBRACE | MULTISET OPENPAREN expression CLOSEPAREN);
+
+seqDisplayExpression: (LBRACKET (expressions)? RBRACKET);
+
+parensExpression: OPENPAREN (tupleArgs)? CLOSEPAREN;
+
+tupleArgs: actualBinding (COMMA actualBinding)*;
+
+actualBinding: expression;
+
+primaryExpression:
+    nameSegment (suffix)*
+    | lambdaExpression
+    | seqDisplayExpression (suffix)*
+    | setDisplayExpression (suffix)*
+    | endlessExpression
     | constAtomExpression (suffix)*;
 
-constAtomExpression: literalExpression;
+lambdaExpression: (wildIdent | OPENPAREN (identType (COMMA identType)*)? CLOSEPAREN) LAMBDAOP expression;
+
+endlessExpression: letExpression | ifExpression;
+
+ifExpression: IF expression THEN expression ELSE expression;
+
+letExpression: (
+    VAR casePattern (COMMA casePattern)* GETS expression (COMMA expression)*
+) SEMICOLON expression;
+
+casePattern: identType;
+
+constAtomExpression: literalExpression | parensExpression | cardinalityExpression;
+
+cardinalityExpression: BVOR expression BVOR;
 
 literalExpression: FALSE
     | TRUE
     | NULL
     | nat
-    | dec
-    | charToken
-    | stringToken
+    | CharToken
+    | StringToken
     ;
 
 nat: (DIGITS | HEXDIGITS);
-dec: DECIMALDIGITS;
-charToken: QUOTE CharChar QUOTE;
-stringToken: DBLQUOTE (STRINGCHAR)* DBLQUOTE;
+
+
+// function decl
+//functionDecl: FUNCTION methodFunctionName functionSignature functionBody;
+//
+//functionSignature: (genericParameter)? formals COLON type;
+//
+//functionBody: LBRACE expression RBRACE;
+//
+//genericParameter: LESS type GREATER;
+
 
 // IDENTS
 gIdentType: identType (GETS expression)?;
@@ -129,7 +203,17 @@ localIdentTypeOptional: wildIdent (COLON type)?;
 
 type: domainType;
 
-domainType: (BOOL | INT | CHAR | STRING);
+domainType: (BOOL | INT | CHAR | STRING | NAT| sequenceType | setType | multisetType | T | tupleType);
+
+sequenceType: SEQ (genericInstantiation)?;
+
+setType: SET (genericInstantiation)?;
+
+multisetType: MULTISET (genericInstantiation)?;
+
+tupleType: OPENPAREN (type (COMMA type)*)? CLOSEPAREN;
+
+genericInstantiation: LESS type (COMMA type)? GREATER;
 
 attributeName: ident;
 

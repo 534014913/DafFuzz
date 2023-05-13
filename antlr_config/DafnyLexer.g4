@@ -13,6 +13,11 @@ INT: 'int';
 BOOL: 'bool';
 CHAR: 'char';
 STRING: 'string';
+NAT: 'nat';
+T: 'T';
+SEQ: 'seq';
+SET: 'set';
+MULTISET: 'multiset';
 
 // KEYWORDS
 VAR: 'var';
@@ -28,6 +33,8 @@ OPAQUE: 'opaque';
 IF: 'if';
 THEN: 'then';
 ELSE: 'else';
+ASOP: 'as';
+ISOP: 'is';
 
 // SYMBOLS
 ADD: '+';
@@ -41,6 +48,7 @@ BVOR: '|';
 BVXOR: '^';
 COLON: ':';
 COMMA: ',';
+NOTIN: '!in';
 NOT: '!';
 SEMICOLON: ';';
 OPENPAREN: '(';
@@ -50,15 +58,17 @@ LBRACE: '{';
 RBRACE: '}';
 LBRACKET: '[';
 RBRACKET: ']';
+TWODOT: '..';
 DOT: '.';
 EQUIVOP: '<==>';
+LAMBDAOP: '=>';
 IMPLIESOP: '==>';
 EXPLIESOP: '<==';
 ANDOP: '&&';
 OROP: '||';
 EQ: '==';
-LEFTSHIFT: '<<';
-RIGHTSHIFT: '>>';
+//LEFTSHIFT: '<<';
+//RIGHTSHIFT: '>>';
 LESSEQ: '<=';
 GREATEREQ: '>=';
 LESS: '<';
@@ -78,22 +88,25 @@ TRUE: 'true';
 NULL: 'null';
 QUOTE: '\'';
 DBLQUOTE: '"';
+CH_QUOTE: '\\\'';
+
+CharToken: QUOTE (CharChar | CH_QUOTE) QUOTE;
+StringToken: DBLQUOTE (STRINGCHAR)* DBLQUOTE;
+
 
 // TOKENS
-IDENT: IDCHAR (IDCHAR)*;
+fragment DIGIT : [0-9];
 DIGITS: DIGIT (('_')? DIGIT)*;
-DECIMALDIGITS: DIGIT (('_')? DIGIT)* '.' DIGIT (('_')? DIGIT)*;
-fragment IDCHAR: [a-zA-Z'_?0-9]; // NONDIGIT + DIGIT
+//DECIMALDIGITS: DIGIT (('_')? DIGIT)* '.' DIGIT (('_')? DIGIT)*;
+fragment IDCHAR: [a-zA-Z_?0-9]; // NONDIGIT + DIGIT
 fragment NONDIGIT: [a-zA-Z'_?];  // LETTER + SPECIAL
 fragment HEXDIGIT: [0-9a-fA-F];
-LETTER: [a-zA-Z];
-DIGIT : [0-9];
 HEXDIGITS: '0x' HEXDIGIT ('_' HEXDIGIT)*;
 SPECIAL: QUOTE | '_' | '?';
+IDENT: IDCHAR (IDCHAR)*;
 
-CharChar: ~('\'' | '\r' | '\\' | '\n');
-STRINGCHAR: ~('\r' | '\n' | '"' | '\\');
-
+CharChar: ~('\r' | '\\' | '\'' | '\n');
+STRINGCHAR: ~('\r' | '"' | '\n');
 
 
 
