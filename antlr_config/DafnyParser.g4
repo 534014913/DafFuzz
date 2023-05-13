@@ -6,6 +6,7 @@ options {
 
 
 // EOF indicates that the program must consume to the end of the input.
+// TOP LEVEL
 dafny: (includeDirective)* (topDecl)* EOF;
 
 includeDirective: INCLUDE StringToken;
@@ -105,10 +106,11 @@ expressions: expression (COMMA expression)*;
 //expression: equivExpression (SEMICOLON expression)?;
 
 //expression: equivExpression (SEMICOLON expression)?;
-expression: equivExpression;
+//expression: equivExpression;
 //expression: impliesExpression (SEMICOLON expression)?;
 
-equivExpression: impliesExpliesExpression (EQUIVOP impliesExpliesExpression)*;
+//equivExpression: impliesExpliesExpression (EQUIVOP impliesExpliesExpression)*;
+expression: impliesExpliesExpression (EQUIVOP impliesExpliesExpression)*;
 
 impliesExpliesExpression: logicalExpression (IMPLIESOP impliesExpression
     | EXPLIESOP logicalExpression (EXPLIESOP logicalExpression)*)?;
