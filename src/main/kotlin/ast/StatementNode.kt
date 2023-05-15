@@ -25,8 +25,8 @@ data class BlockStatement (
 }
 
 data class VariableDeclarationStatement(
-    val lhs: String,
-    val rhs: String,
+    val lhs: MutableList<LocalIdentTypeOptional>,
+    val rhs: MutableList<ExpressionNode>,
     override val text: String
 ): StatementNode {
     override fun toDafny(): String {

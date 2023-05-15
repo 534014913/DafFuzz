@@ -55,7 +55,7 @@ data class ClassMemberDeclaration(
             method!!.toDafny()
         } else {
             function!!.toDafny()
-        };
+        }
     }
 
 }
@@ -100,7 +100,7 @@ data class Formal(
 
 data class IdentType(
     val ident: String,
-    val type: DafnyType,
+    val type: TypeNode,
 ): ASTNode {
     override fun toDafny(): String {
         TODO("Not yet implemented")
@@ -127,20 +127,17 @@ data class EnsureClause (
 
 data class LocalIdentTypeOptional(
    val ident: String,
-   val typeNode: TypeNode,
+   val typeNode: TypeNode?,
 ): ASTNode {
     override fun toDafny(): String {
-        TODO("Not yet implemented")
+        return "$ident ${if (typeNode == null) "" else ": ${typeNode.toDafny()}"}"
     }
 }
 
-
-
-enum class RelationalOperator{
-    EQ,
-    NOT_EQ,
-    LESS,
-    LESS_EQ,
-    GREATER,
-    GREATER_EQ
+data class Expressions(
+    val expressions: List<DafnyExpression>
+): ASTNode {
+    override fun toDafny(): String {
+        return expressions.joinToString(", ") { x -> x.toDafny() }
+    }
 }

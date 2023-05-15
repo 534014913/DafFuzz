@@ -4,8 +4,9 @@ import antlr.DafnyParserBaseVisitor
 import ast.*
 import org.antlr.v4.runtime.tree.ParseTree
 
-class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
+class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
     var ident = 0
+
     companion object {
         fun makeAST(parseTree: ParseTree): Dafny {
             val dafnyVisitor = DafnyVisitor()
@@ -16,7 +17,7 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
     override fun visitDafny(ctx: DafnyParser.DafnyContext?): Dafny {
         if (ctx == null) throw Exception()
         val includes: MutableList<IncludeDirective> = mutableListOf()
-        val topDecls: MutableList<TopDeclaration> =  mutableListOf()
+        val topDecls: MutableList<TopDeclaration> = mutableListOf()
         for (includeDirective in ctx.includeDirective()) {
             includes.add(visitIncludeDirective(includeDirective))
         }
@@ -52,7 +53,9 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
             "ghost" -> DeclarationModifier(DeclarationModifierEnum.GHOST)
             "static" -> DeclarationModifier(DeclarationModifierEnum.STATIC)
             "opaque" -> DeclarationModifier(DeclarationModifierEnum.OPAQUE)
-            else -> {throw Exception("not a declaration modifier keyword")}
+            else -> {
+                throw Exception("not a declaration modifier keyword")
+            }
         }
     }
 
@@ -63,8 +66,8 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
             val method = visitMethodDecl(ctx.methodDecl())
             ClassMemberDeclaration(isMethod, method, null)
         } else {
-           val function = visitFunctionDeclaration(ctx.functionDeclaration())
-           ClassMemberDeclaration(isMethod, null, function)
+            val function = visitFunctionDeclaration(ctx.functionDeclaration())
+            ClassMemberDeclaration(isMethod, null, function)
         }
     }
 
@@ -75,7 +78,7 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
         val methodSpec = visitMethodSpec(ctx.methodSpec())
         val statement = visitBlockStmt(ctx.blockStmt())
 
-        return MethodDeclaration(methodName, methodSignature, methodSpec, statement);
+        return MethodDeclaration(methodName, methodSignature, methodSpec, statement)
     }
 
     override fun visitMethodSignature(ctx: DafnyParser.MethodSignatureContext?): MethodSignature {
@@ -94,7 +97,7 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
         for (statement in ctx.stmt()) {
             statements.add(visitNonLabeledStmt(statement.nonLabeledStmt()))
         }
-        ident++;
+        ident++
         return BlockStatement(statements, ident)
     }
 
@@ -106,9 +109,9 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
             return visitPrintStmt(ctx.printStmt())
         } else if (ctx.returnStmt() != null) {
             return visitReturnStmt(ctx.returnStmt())
-        } else if (ctx.varDeclStmt() != null){
+        } else if (ctx.varDeclStmt() != null) {
             return visitVarDeclStmt(ctx.varDeclStmt())
-        } else if (ctx.ifStmt() != null)  {
+        } else if (ctx.ifStmt() != null) {
             return visitIfStmt(ctx.ifStmt())
         } else if (ctx.assertStmt() != null) {
             return visitAssertStmt(ctx.assertStmt())
@@ -126,7 +129,8 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitIfStmt(ctx: DafnyParser.IfStmtContext?): IfStatement {
         if (ctx == null) throw Exception()
-        val elseClause = if (ctx.elseSubStmt() == null) null else visitElseSubStmt(ctx.elseSubStmt())
+        val elseClause =
+            if (ctx.elseSubStmt() == null) null else visitElseSubStmt(ctx.elseSubStmt())
         return IfStatement(ctx.guard().text, visitBlockStmt(ctx.blockStmt()), elseClause, "")
     }
 
@@ -154,12 +158,16 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitVarDeclStmt(ctx: DafnyParser.VarDeclStmtContext?): VariableDeclarationStatement {
         if (ctx == null) throw Exception()
-        var lhs = mutableListOf<LocalIdentTypeOptional>()
+        val lhs = mutableListOf<LocalIdentTypeOptional>()
         for (localIdent in ctx.localIdentTypeOptional()) {
             lhs.add(visitLocalIdentTypeOptional(localIdent))
         }
-        val rhs = ctx.rhs()
-        return VariableDeclarationStatement(lhs.text, rhs.text, "")
+        val rhsExpressions = mutableListOf<ExpressionNode>()
+        for (rh in ctx.rhs()) {
+            val ex = rh.expression()
+            rhsExpressions.add(visitExpression(ex))
+        }
+        return VariableDeclarationStatement(lhs, rhsExpressions, "")
     }
 
     override fun visitFunctionDeclaration(ctx: DafnyParser.FunctionDeclarationContext?): FunctionDeclaration {
@@ -167,9 +175,15 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
         val isPure = ctx.METHOD() == null
         val name = ctx.methodFunctionName().text
         val functionSignature = visitFunctionSignature(ctx.functionSignature())
-        val functionSpecification =visitFunctionSpec(ctx.functionSpec())
+        val functionSpecification = visitFunctionSpec(ctx.functionSpec())
         val functionBody = visitFunctionBody(ctx.functionBody())
-        return FunctionDeclaration(isPure, name, functionSignature, functionSpecification, functionBody)
+        return FunctionDeclaration(
+            isPure,
+            name,
+            functionSignature,
+            functionSpecification,
+            functionBody
+        )
     }
 
     override fun visitFunctionSignature(ctx: DafnyParser.FunctionSignatureContext?): FunctionSignature {
@@ -194,8 +208,540 @@ class DafnyVisitor: DafnyParserBaseVisitor<ASTNode>() {
         return LocalIdentTypeOptional(ident, type)
     }
 
-    override fun visitType(ctx: DafnyParser.TypeContext?): ASTNode {
-        return super.visitType(ctx)
+    override fun visitType(ctx: DafnyParser.TypeContext?): TypeNode {
+        if (ctx == null) throw Exception()
+        if (ctx.arrowType() != null) {
+            return visitArrowType(ctx.arrowType())
+        }
+        return visitDomainType(ctx.domainType())
+    }
+
+    override fun visitArrowType(ctx: DafnyParser.ArrowTypeContext?): ArrowType {
+        if (ctx == null) throw Exception()
+        val type = visitDomainType(ctx.domainType())
+        val afterArrow = visitType(ctx.type())
+        return ArrowType(type, afterArrow)
+    }
+
+    override fun visitDomainType(ctx: DafnyParser.DomainTypeContext?): TypeNode {
+        if (ctx == null) throw Exception()
+        if (ctx.BOOL() != null) return BoolNode()
+        if (ctx.INT() != null) return IntNode()
+        if (ctx.CHAR() != null) return CharNode()
+        if (ctx.STRING() != null) return StringNode()
+        if (ctx.NAT() != null) return NatNode()
+        if (ctx.sequenceType() != null) return visitSequenceType(ctx.sequenceType())
+        if (ctx.setType() != null) return visitSetType(ctx.setType())
+        if (ctx.multisetType() != null) return visitMultisetType(ctx.multisetType())
+        if (ctx.T() != null) return TNode()
+        if (ctx.tupleType() != null) return visitTupleType(ctx.tupleType())
+        else {
+            throw Exception()
+        }
+    }
+
+    override fun visitSequenceType(ctx: DafnyParser.SequenceTypeContext?): SequenceNode {
+        val g = visitGenericInstantiation(ctx?.genericInstantiation())
+        return SequenceNode(g)
+    }
+
+    override fun visitSetType(ctx: DafnyParser.SetTypeContext?): SetNode {
+        val g = visitGenericInstantiation(ctx?.genericInstantiation())
+        return SetNode(g)
+    }
+
+    override fun visitMultisetType(ctx: DafnyParser.MultisetTypeContext?): MultiSetNode {
+        val g = visitGenericInstantiation(ctx?.genericInstantiation())
+        return MultiSetNode(g)
+    }
+
+    override fun visitTupleType(ctx: DafnyParser.TupleTypeContext?): TupleNode {
+        if (ctx == null) throw Exception()
+        val types = mutableListOf<TypeNode>()
+        for (type in ctx.type()) {
+            types.add(visitType(type))
+        }
+        return TupleNode(types)
+    }
+
+    override fun visitGenericInstantiation(ctx: DafnyParser.GenericInstantiationContext?): GenericInstantiation {
+        if (ctx == null) throw Exception()
+        val types = mutableListOf<TypeNode>()
+        for (type in ctx.type()) {
+            types.add(visitType(type))
+        }
+        return GenericInstantiation(types)
+    }
+
+    override fun visitExpression(ctx: DafnyParser.ExpressionContext?): DafnyExpression {
+        if (ctx == null) throw Exception()
+        val impliesExplies = mutableListOf<ImpliesExpliesExpression>()
+        for (im in ctx.impliesExpliesExpression()) {
+            impliesExplies.add(visitImpliesExpliesExpression(im))
+        }
+        return DafnyExpression(impliesExplies)
+    }
+
+    override fun visitImpliesExpliesExpression(ctx: DafnyParser.ImpliesExpliesExpressionContext?): ImpliesExpliesExpression {
+        if (ctx == null) throw Exception()
+        val isSimplest = ctx.IMPLIESOP() == null && ctx.EXPLIESOP() == null
+        if (isSimplest) {
+            println("SIMPLEST")
+            println(ctx.text)
+        }
+        val isImplies = ctx.IMPLIESOP() != null
+        val firstLogical = visitLogicalExpression(ctx.logicalExpression(0))
+        var implies: ImpliesExpression? = null
+        if (isImplies) {
+            implies = visitImpliesExpression(ctx.impliesExpression())
+        }
+        val explies: MutableList<LogicalExpression> = mutableListOf()
+        if (!isImplies) {
+            assert(ctx.EXPLIESOP().size > 0)
+            var i = 1
+            while (ctx.logicalExpression(i) != null) {
+                explies.add(visitLogicalExpression(ctx.logicalExpression(i)))
+                i++
+            }
+        }
+        return ImpliesExpliesExpression(firstLogical, isSimplest, isImplies, implies, explies)
+    }
+
+    override fun visitImpliesExpression(ctx: DafnyParser.ImpliesExpressionContext?): ImpliesExpression {
+        if (ctx == null) throw Exception()
+        val logical = visitLogicalExpression(ctx.logicalExpression())
+        val hasImplies = ctx.IMPLIESOP() != null
+        var implies: ImpliesExpression? = null
+        if (hasImplies) {
+            assert(ctx.impliesExpression() != null)
+            implies = visitImpliesExpression(ctx.impliesExpression())
+        }
+        return ImpliesExpression(logical, hasImplies, implies)
+    }
+
+    override fun visitLogicalExpression(ctx: DafnyParser.LogicalExpressionContext?): LogicalExpression {
+        if (ctx == null) throw Exception()
+        val hasMoreRelational = ctx.relationalExpression().size > 1
+        val primaryRelational = visitRelationalExpression(ctx.relationalExpression(0))
+        var firstLogical: LogicalOperator? = null
+        if (ctx.firstLogicOp() != null) {
+            firstLogical = visitFirstLogicOp(ctx.firstLogicOp())
+        }
+
+        val subLogical = mutableListOf<LogicalOperator>()
+        val subRelational = mutableListOf<RelationalExpression>()
+        if (hasMoreRelational) {
+            assert(ctx.relationalExpression().size > 1)
+            assert(ctx.relationalExpression().size - 1 == ctx.logicOp().size)
+            var i = 1
+            while (ctx.relationalExpression(i) != null) {
+                subLogical.add(visitLogicOp(ctx.logicOp(i - 1)))
+                subRelational.add(visitRelationalExpression(ctx.relationalExpression(i)))
+                i++
+            }
+        }
+        return LogicalExpression(
+            firstLogical,
+            primaryRelational,
+            subLogical,
+            subRelational,
+            hasMoreRelational
+        )
+    }
+
+    override fun visitFirstLogicOp(ctx: DafnyParser.FirstLogicOpContext?): LogicalOperator {
+        if (ctx == null) throw Exception()
+        return if (ctx.ANDOP() != null) {
+            LogicalOperator.AND_OP
+        } else {
+            assert(ctx.OROP() != null)
+            LogicalOperator.OR_OP
+        }
+    }
+
+    override fun visitLogicOp(ctx: DafnyParser.LogicOpContext?): LogicalOperator {
+        if (ctx == null) throw Exception()
+        return if (ctx.ANDOP() != null) {
+            LogicalOperator.AND_OP
+        } else {
+            assert(ctx.OROP() != null)
+            LogicalOperator.OR_OP
+        }
+    }
+
+    override fun visitRelationalExpression(ctx: DafnyParser.RelationalExpressionContext?): RelationalExpression {
+        if (ctx == null) throw Exception()
+        val hasSubTerms = ctx.relOp().isNotEmpty()
+        val term = visitTerm(ctx.term(0))
+        val relOp = mutableListOf<RelationalOperator>()
+        val restTerms = mutableListOf<Term>()
+        assert(ctx.relOp().size == ctx.term().size - 1)
+        var i = 1
+        while (ctx.term(i) != null) {
+            relOp.add(visitRelOp(ctx.relOp(i - 1)))
+            restTerms.add(visitTerm(ctx.term(i)))
+            i++
+        }
+        return RelationalExpression(term, hasSubTerms, relOp, restTerms)
+    }
+
+    override fun visitRelOp(ctx: DafnyParser.RelOpContext?): RelationalOperator {
+        if (ctx == null) throw Exception()
+        if (ctx.EQ() != null) {
+            return RelationalOperator.EQ
+        } else if (ctx.NOTEQ() != null) {
+            return RelationalOperator.NOTEQ
+        } else if (ctx.LESS() != null) {
+            return RelationalOperator.LESS
+        } else if (ctx.LESSEQ() != null) {
+            return RelationalOperator.LESSEQ
+        } else if (ctx.GREATER() != null) {
+            return RelationalOperator.GREATER
+        } else if (ctx.GREATEREQ() != null) {
+            return RelationalOperator.GREATEREQ
+        } else if (ctx.NOTIN() != null) {
+            return RelationalOperator.NOTIN
+        } else if (ctx.IN() != null) {
+            return RelationalOperator.IN
+        } else {
+            assert(ctx.DISJOINT() != null)
+            return RelationalOperator.DISJOINT
+        }
+    }
+
+    override fun visitTerm(ctx: DafnyParser.TermContext?): Term {
+        if (ctx == null) throw Exception()
+        val asExp = visitAsExpression(ctx.asExpression(0))
+        val hasSub = ctx.binaryOp().isNotEmpty()
+        val biOp = mutableListOf<BinaryOperator>()
+        val restAsExps = mutableListOf<AsExpression>()
+        var i = 1
+        while (ctx.asExpression(i) != null) {
+            biOp.add(visitBinaryOp(ctx.binaryOp(i - 1)))
+            restAsExps.add(visitAsExpression(ctx.asExpression(i)))
+            i++
+        }
+        return Term(asExp, hasSub, biOp, restAsExps)
+    }
+
+    override fun visitBinaryOp(ctx: DafnyParser.BinaryOpContext?): BinaryOperator {
+        if (ctx == null) throw Exception()
+        return if (ctx.ADD() != null) {
+            BinaryOperator.ADD
+        } else if (ctx.SUB() != null) {
+            BinaryOperator.SUB
+        } else if (ctx.MUL() != null) {
+            BinaryOperator.MUL
+        } else if (ctx.DIV() != null) {
+            BinaryOperator.DIV
+        } else if (ctx.MOD() != null) {
+            BinaryOperator.MOD
+        } else if (ctx.BVAND() != null) {
+            BinaryOperator.BVAND
+        } else if (ctx.BVOR() != null) {
+            BinaryOperator.BVOR
+        } else {
+            assert(ctx.BVXOR() != null)
+            BinaryOperator.BVXOR
+        }
+
+    }
+
+    override fun visitAsExpression(ctx: DafnyParser.AsExpressionContext?): AsExpression {
+        if (ctx == null) throw Exception()
+        val unary = visitUnaryExpression(ctx.unaryExpression())
+        val asOps = mutableListOf<AsOperator>()
+        val types = mutableListOf<TypeNode>()
+        if (ctx.asOp().isNotEmpty()) {
+            assert(ctx.asOp().size == ctx.type().size)
+            for (asOp in ctx.asOp()) {
+                asOps.add(visitAsOp(asOp))
+            }
+            for (t in ctx.type()) {
+                types.add(visitType(t))
+            }
+        }
+        return AsExpression(unary, asOps, types)
+    }
+
+    override fun visitAsOp(ctx: DafnyParser.AsOpContext?): AsOperator {
+        if (ctx == null) throw Exception()
+        return if (ctx.ASOP() != null) {
+            AsOperator.AS
+        } else {
+            assert(ctx.ISOP() != null)
+            AsOperator.IS
+        }
+    }
+
+    override fun visitUnaryExpression(ctx: DafnyParser.UnaryExpressionContext?): UnaryExpression {
+        if (ctx == null) throw Exception()
+        if (ctx.primaryExpression() != null) {
+            val isPrimary = true
+            return UnaryExpression(
+                null,
+                null,
+                isPrimary,
+                visitPrimaryExpression(ctx.primaryExpression())
+            )
+        }
+        val unaryOp = if (ctx.SUB() != null) UnaryOperator.SUB else UnaryOperator.NOT
+        val unaryExp = visitUnaryExpression(ctx.unaryExpression())
+        return UnaryExpression(unaryOp, unaryExp, false, null)
+    }
+
+    override fun visitPrimaryExpression(ctx: DafnyParser.PrimaryExpressionContext?): PrimaryExpressionWithSuffix {
+        if (ctx == null) throw Exception()
+        val suffixes = mutableListOf<Suffix>()
+        for (suf in ctx.suffix()) {
+            suffixes.add(visitSuffix(suf))
+        }
+        val primary: PrimaryExpression = if (ctx.nameSegment() != null) {
+            visitNameSegment(ctx.nameSegment())
+        } else if (ctx.lambdaExpression() != null) {
+            visitLambdaExpression(ctx.lambdaExpression())
+        } else if (ctx.seqDisplayExpression() != null) {
+            visitSeqDisplayExpression(ctx.seqDisplayExpression())
+        } else if (ctx.setDisplayExpression() != null) {
+            visitSetDisplayExpression(ctx.setDisplayExpression())
+        } else if (ctx.endlessExpression() != null) {
+            visitEndlessExpression(ctx.endlessExpression())
+        } else {
+            assert(ctx.constAtomExpression() != null)
+            visitConstAtomExpression(ctx.constAtomExpression())
+        }
+
+        return PrimaryExpressionWithSuffix(primary, suffixes)
+    }
+
+    override fun visitSuffix(ctx: DafnyParser.SuffixContext?): Suffix {
+        if (ctx == null) throw Exception()
+        return if (ctx.selectionSuffix() != null) {
+            visitSelectionSuffix(ctx.selectionSuffix())
+        } else if (ctx.argumentListSuffix() != null) {
+            visitArgumentListSuffix(ctx.argumentListSuffix())
+        } else if (ctx.augmentedDotSuffix() != null) {
+            visitAugmentedDotSuffix(ctx.augmentedDotSuffix())
+        } else if (ctx.subsequenceSuffix() != null) {
+            visitSubsequenceSuffix(ctx.subsequenceSuffix())
+        } else if (ctx.sequenceUpdateSuffix() != null) {
+            visitSequenceUpdateSuffix(ctx.sequenceUpdateSuffix())
+        } else {
+            assert(ctx.sliceByLengthSuffix() != null)
+            visitSliceByLengthSuffix(ctx.sliceByLengthSuffix())
+        }
+    }
+
+    override fun visitSelectionSuffix(ctx: DafnyParser.SelectionSuffixContext?): SelectionSuffix {
+        if (ctx == null) throw Exception()
+        val expressions = mutableListOf<DafnyExpression>()
+        for (exp in ctx.expression()) {
+            expressions.add(visitExpression(exp))
+        }
+        return SelectionSuffix(expressions)
+    }
+
+    override fun visitArgumentListSuffix(ctx: DafnyParser.ArgumentListSuffixContext?): ArgumentListSuffix {
+        if (ctx == null) throw Exception()
+        val hasExpressions = ctx.expressions() != null
+        var expressions: Expressions? = null
+        if (ctx.expressions() != null) {
+            expressions = visitExpressions(ctx.expressions())
+        }
+        return ArgumentListSuffix(hasExpressions, expressions)
+    }
+
+    override fun visitAugmentedDotSuffix(ctx: DafnyParser.AugmentedDotSuffixContext?): AugmentedDotSuffix {
+        if (ctx == null) throw Exception()
+        val v = if (ctx.dotSuffix().ident() != null) {
+            ctx.dotSuffix().ident().text
+        } else {
+            assert(ctx.dotSuffix().DIGITS() != null)
+            ctx.dotSuffix().DIGITS().text
+        }
+        return AugmentedDotSuffix(v)
+    }
+
+    override fun visitSubsequenceSuffix(ctx: DafnyParser.SubsequenceSuffixContext?): SubSequenceSuffix {
+        if (ctx == null) throw Exception()
+        val exp = if (ctx.expression() != null) {
+            visitExpression(ctx.expression())
+        } else null
+        val lateExp = if (ctx.lateExpression() != null) {
+            visitExpression(ctx.lateExpression().expression())
+        } else null
+        return SubSequenceSuffix(exp, lateExp)
+    }
+
+    override fun visitSequenceUpdateSuffix(ctx: DafnyParser.SequenceUpdateSuffixContext?): SequenceUpdateSuffix {
+        if (ctx == null) throw Exception()
+        val exp = visitExpression(ctx.expression(0))
+        val lateExp = visitExpression(ctx.expression(1))
+        return SequenceUpdateSuffix(exp, lateExp)
+    }
+
+    override fun visitSliceByLengthSuffix(ctx: DafnyParser.SliceByLengthSuffixContext?): SliceByLengthSuffix {
+        if (ctx == null) throw Exception()
+        val exp = visitExpression(ctx.expression())
+        val hasInner = ctx.sliceByLengthSuffix_innner() != null
+        val innerExpressions = mutableListOf<DafnyExpression>()
+        if (hasInner) {
+            for (expr in ctx.sliceByLengthSuffix_innner().expression()) {
+                innerExpressions.add(visitExpression(expr))
+            }
+        }
+        val secColon = ctx.secCOLON().COLON() != null
+        return SliceByLengthSuffix(exp, hasInner, innerExpressions, secColon)
+    }
+
+    override fun visitExpressions(ctx: DafnyParser.ExpressionsContext?): Expressions {
+        if (ctx == null) throw Exception()
+        val exprs = mutableListOf<DafnyExpression>()
+        for (exp in ctx.expression()) {
+            exprs.add(visitExpression(exp))
+        }
+        return Expressions(exprs)
+    }
+
+    override fun visitNameSegment(ctx: DafnyParser.NameSegmentContext?): NameSegment {
+        if (ctx == null) throw Exception()
+        return NameSegment(ctx.ident().text)
+    }
+
+    override fun visitLambdaExpression(ctx: DafnyParser.LambdaExpressionContext?): LambdaExpression {
+        if (ctx == null) throw Exception()
+        val isWildIdent = ctx.wildIdent() != null
+        var wildIdent = ""
+        val identType = mutableListOf<IdentType>()
+        val expression = visitExpression(ctx.expression())
+        if (ctx.wildIdent() != null) {
+            wildIdent = ctx.wildIdent().ident().text
+        } else {
+            for (it in ctx.identType()) {
+                identType.add(visitIdentType(it))
+            }
+        }
+        return LambdaExpression(wildIdent, isWildIdent, identType, expression)
+    }
+
+    override fun visitIdentType(ctx: DafnyParser.IdentTypeContext?): IdentType {
+        if (ctx == null) throw Exception()
+        val t = visitType(ctx.type())
+        return IdentType(ctx.wildIdent().ident().text, t)
+    }
+
+    override fun visitSeqDisplayExpression(ctx: DafnyParser.SeqDisplayExpressionContext?): SeqDisplayExpression {
+        if (ctx == null) throw Exception()
+        var expressions: Expressions? = null
+        if (ctx.expressions() != null) {
+            expressions = visitExpressions(ctx.expressions())
+        }
+
+        return SeqDisplayExpression(expressions)
+    }
+
+    override fun visitSetDisplayExpression(ctx: DafnyParser.SetDisplayExpressionContext?): SetDisplayExpression {
+        if (ctx == null) throw Exception()
+        val isFirst = ctx.LBRACE() != null
+        val firstMulti = ctx.f_MULTISET() != null
+        var expressions: Expressions? = null
+        var expression: DafnyExpression? = null
+        if (isFirst) {
+            expressions = visitExpressions(ctx.expressions())
+        } else {
+            expression = visitExpression(ctx.expression())
+        }
+
+        return SetDisplayExpression(isFirst, firstMulti, expressions, expression)
+    }
+
+    override fun visitEndlessExpression(ctx: DafnyParser.EndlessExpressionContext?): EndlessExpression {
+        if (ctx == null) throw Exception()
+        return if (ctx.ifExpression() != null) {
+            visitIfExpression(ctx.ifExpression())
+        } else {
+            assert(ctx.letExpression() != null)
+            visitLetExpression(ctx.letExpression())
+        }
+    }
+
+    override fun visitIfExpression(ctx: DafnyParser.IfExpressionContext?): IfExpression {
+        if (ctx == null) throw Exception()
+        val guard = visitExpression(ctx.expression(0))
+        val t = visitExpression(ctx.expression(1))
+        val e = visitExpression(ctx.expression(2))
+        return IfExpression(guard, t, e)
+    }
+
+    override fun visitLetExpression(ctx: DafnyParser.LetExpressionContext?): LetExpression {
+        if (ctx == null) throw Exception()
+        val laterExp = visitExpression(ctx.laterLetExp().expression())
+        val localIdents = mutableListOf<LocalIdentTypeOptional>()
+        for (li in ctx.localIdentTypeOptional()) {
+            localIdents.add(visitLocalIdentTypeOptional(li))
+        }
+
+        val exprs = mutableListOf<DafnyExpression>()
+        for (exp in ctx.expression()) {
+            exprs.add(visitExpression(exp))
+        }
+
+        return LetExpression(localIdents, exprs, laterExp)
+    }
+
+    override fun visitConstAtomExpression(ctx: DafnyParser.ConstAtomExpressionContext?): ConstAtomExpression {
+        if (ctx == null) throw Exception()
+        return if (ctx.literalExpression() != null) {
+            visitLiteralExpression(ctx.literalExpression())
+        } else if (ctx.parensExpression() != null) {
+            visitParensExpression(ctx.parensExpression())
+        } else {
+            assert(ctx.cardinalityExpression() != null)
+            visitCardinalityExpression(ctx.cardinalityExpression())
+        }
+    }
+
+    override fun visitLiteralExpression(ctx: DafnyParser.LiteralExpressionContext?): LiteralExpression {
+        if (ctx == null) throw Exception()
+        val text : String = if (ctx.FALSE() != null) {
+            "false"
+        } else if (ctx.TRUE() != null) {
+            "true"
+        } else if (ctx.NULL() != null) {
+            "null"
+        } else if (ctx.nat() != null) {
+            ctx.nat().DIGITS().text
+        } else if (ctx.CharToken() != null) {
+            ctx.CharToken().text
+        } else {
+            assert(ctx.StringToken() != null)
+            ctx.StringToken().text
+        }
+        return LiteralExpression(text)
+    }
+
+    override fun visitParensExpression(ctx: DafnyParser.ParensExpressionContext?): ParensExpression {
+        if (ctx == null) throw Exception()
+        var tuple: TupleArgs? = null
+        if (ctx.tupleArgs() != null) {
+            tuple = visitTupleArgs(ctx.tupleArgs())
+        }
+        return ParensExpression(tuple)
+    }
+
+    override fun visitTupleArgs(ctx: DafnyParser.TupleArgsContext?): TupleArgs {
+        if (ctx == null) throw Exception()
+        val bindings = mutableListOf<DafnyExpression>()
+        for (exp in ctx.expression()) {
+            bindings.add(visitExpression(exp))
+        }
+        return TupleArgs(bindings)
+    }
+
+    override fun visitCardinalityExpression(ctx: DafnyParser.CardinalityExpressionContext?): CardinalityExpression {
+        if (ctx == null) throw Exception()
+        val expr = visitExpression(ctx.expression())
+        return CardinalityExpression(expr)
     }
 
 }

@@ -86,9 +86,15 @@ suffix: selectionSuffix
     | sequenceUpdateSuffix
     | sliceByLengthSuffix;
 
-sliceByLengthSuffix: LBRACKET expression COLON (expression (COLON expression)* (COLON)?)? RBRACKET;
+sliceByLengthSuffix: LBRACKET expression COLON (sliceByLengthSuffix_innner (secCOLON)?)? RBRACKET;
 
-subsequenceSuffix: LBRACKET (expression)? TWODOT (expression)? RBRACKET;
+secCOLON: COLON;
+
+sliceByLengthSuffix_innner: expression (COLON expression)*;
+
+subsequenceSuffix: LBRACKET (expression)? TWODOT (lateExpression)? RBRACKET;
+
+lateExpression: expression;
 
 sequenceUpdateSuffix: LBRACKET expression GETS expression RBRACKET;
 
@@ -117,7 +123,11 @@ impliesExpliesExpression: logicalExpression (IMPLIESOP impliesExpression
 
 impliesExpression: logicalExpression (IMPLIESOP impliesExpression)?;
 
-logicalExpression: (ANDOP | OROP)? relationalExpression ((ANDOP | OROP) relationalExpression)*;
+logicalExpression: (firstLogicOp)? relationalExpression (logicOp relationalExpression)*;
+
+logicOp: ANDOP | OROP;
+
+firstLogicOp: ANDOP | OROP;
 
 //relationalExpression: shiftTerm (relOp shiftTerm)*;
 relationalExpression: term (relOp term)*;
@@ -146,19 +156,24 @@ term: asExpression (binaryOp asExpression)*;
 
 binaryOp: (ADD | SUB | MUL | DIV | MOD | BVAND | BVOR | BVXOR);
 
-asExpression: unaryExpression ((ASOP | ISOP) type)*;
+asExpression: unaryExpression (asOp type)*;
+
+asOp: (ASOP | ISOP);
 
 unaryExpression: (SUB unaryExpression | NOT unaryExpression | primaryExpression);
 
-setDisplayExpression: ((MULTISET)? LBRACE (expressions)? RBRACE | MULTISET OPENPAREN expression CLOSEPAREN);
+setDisplayExpression: ((f_MULTISET)? LBRACE (expressions)? RBRACE | MULTISET OPENPAREN expression CLOSEPAREN);
+
+f_MULTISET: MULTISET;
 
 seqDisplayExpression: (LBRACKET (expressions)? RBRACKET);
 
 parensExpression: OPENPAREN (tupleArgs)? CLOSEPAREN;
 
-tupleArgs: actualBinding (COMMA actualBinding)*;
+//tupleArgs: actualBinding (COMMA actualBinding)*;
+tupleArgs: expression (COMMA expression)*;
 
-actualBinding: expression;
+//actualBinding: expression;
 
 primaryExpression:
     nameSegment (suffix)*
@@ -180,7 +195,9 @@ ifExpression: IF expression THEN expression ELSE expression;
 
 letExpression: (
     VAR localIdentTypeOptional (COMMA localIdentTypeOptional)* GETS expression (COMMA expression)*
-) SEMICOLON expression;
+) laterLetExp;
+
+laterLetExp: SEMICOLON expression;
 
 //casePattern: localIdentTypeOptional;
 
@@ -196,7 +213,7 @@ literalExpression: FALSE
     | StringToken
     ;
 
-nat: (DIGITS | HEXDIGITS);
+nat: DIGITS;
 
 
 // function decl

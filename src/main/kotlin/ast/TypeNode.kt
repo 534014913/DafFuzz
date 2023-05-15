@@ -36,8 +36,8 @@ data class GenericInstantiation(
 }
 
 data class SequenceNode(
-    override val baseString: String = "seq",
-    val genericInstantiation: GenericInstantiation?
+    val genericInstantiation: GenericInstantiation?,
+    override val baseString: String = "seq"
 ): TypeNode {
     override fun toDafny(): String {
         val generic = genericInstantiation?.toDafny() ?: ""
@@ -46,8 +46,8 @@ data class SequenceNode(
 }
 
 data class SetNode(
-    override val baseString: String = "set",
-    val genericInstantiation: GenericInstantiation?
+    val genericInstantiation: GenericInstantiation?,
+    override val baseString: String = "set"
 ): TypeNode {
     override fun toDafny(): String {
         val generic = genericInstantiation?.toDafny() ?: ""
@@ -56,8 +56,8 @@ data class SetNode(
 }
 
 data class MultiSetNode(
-    override val baseString: String = "multiset",
-    val genericInstantiation: GenericInstantiation?
+    val genericInstantiation: GenericInstantiation?,
+    override val baseString: String = "multiset"
 ): TypeNode {
     override fun toDafny(): String {
         val generic = genericInstantiation?.toDafny() ?: ""
@@ -66,8 +66,8 @@ data class MultiSetNode(
 }
 
 data class TupleNode(
-    override val baseString: String = "tuple",
-    val types: List<TypeNode>
+    val types: List<TypeNode>,
+    override val baseString: String = "tuple"
 ): TypeNode {
     override fun toDafny(): String {
         return "(${types.joinToString(", ") { x -> x.toDafny()}})"
@@ -77,5 +77,15 @@ data class TupleNode(
 data class TNode(
     override val baseString: String = "T"
 ) : TypeNode {
+}
+
+data class ArrowType(
+    val type: TypeNode,
+    val afterArrow: TypeNode,
+    override val baseString: String = "->"
+) : TypeNode {
+    override fun toDafny(): String {
+        return "${type.toDafny()} -> ${afterArrow.toDafny()}"
+    }
 }
 
