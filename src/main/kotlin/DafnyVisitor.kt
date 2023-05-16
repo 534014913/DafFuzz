@@ -3,8 +3,9 @@ import antlr.DafnyParserBaseVisitor
 import ast.*
 import org.antlr.v4.runtime.tree.ParseTree
 
+var ident = 1
+
 class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
-    var ident = 0
 
     companion object {
         fun makeAST(parseTree: ParseTree): Dafny {
@@ -93,11 +94,12 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
     override fun visitBlockStmt(ctx: DafnyParser.BlockStmtContext?): BlockStatement {
         if (ctx == null) throw Exception("no block")
         val statements: MutableList<StatementNode> = mutableListOf()
+        val oldIdent = ident
         ident++
         for (statement in ctx.stmt()) {
             statements.add(visitNonLabeledStmt(statement.nonLabeledStmt()))
         }
-        return BlockStatement(statements, ident)
+        return BlockStatement(statements, oldIdent)
     }
 
     override fun visitNonLabeledStmt(ctx: DafnyParser.NonLabeledStmtContext?): StatementNode {

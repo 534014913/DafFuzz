@@ -6,7 +6,7 @@ sealed interface ASTNode {
 
 data class Dafny(
     val includes: List<IncludeDirective>,
-    val toplevel: List<TopDeclaration>,
+    var toplevel: List<TopDeclaration>,
 ): ASTNode {
     override fun toDafny(): String {
         return includes.joinToString("\n") { x -> x.toDafny() } +

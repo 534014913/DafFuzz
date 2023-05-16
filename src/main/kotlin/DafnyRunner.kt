@@ -3,10 +3,10 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class DafnyRunner(private val dafnyPath: String) {
-    fun runDafny(file: File, workingDir: File, cmd: String, options: String): String? {
+    fun runDafny(file: File, workingDir: File, cmd: String): String? {
         file.copyTo(File("/Users/laiyi/Development/newDAFNY/dafny/Scripts/test.dfy"), true)
         try {
-            val command = "$dafnyPath $options $cmd test.dfy"
+            val command = "$dafnyPath $cmd test.dfy"
             val parts = command.split("\\s".toRegex())
             val proc = ProcessBuilder(*parts.toTypedArray())
                 .directory(workingDir)

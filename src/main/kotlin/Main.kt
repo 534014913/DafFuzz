@@ -67,6 +67,7 @@ fun processDafny(file: File, runner: DafnyRunner) {
     if (!file.isFile) {
         return
     }
+    println("Processing ${file.name}")
     val streamedInFile = FileInputStream(file);
     val input = CharStreams.fromStream(streamedInFile)
     streamedInFile.close();
@@ -88,9 +89,31 @@ fun processDafny(file: File, runner: DafnyRunner) {
     val tmp = File(TMP_DIR + "t_" + file.name)
     tmp.writeText(ast.toDafny())
 
-    println(runner.runDafny(tmp, File(WORKING_DIR), "run", "/functionSyntax:3"))
+//    println(runner.runDafny(tmp, File(WORKING_DIR), "run", "/functionSyntax:3"))
+    val res: String = runner.runDafny(tmp, File(WORKING_DIR), "run") ?: throw Exception()
+//    print(res)
+    val list = mutableListOf<Int>()
+    for (x in res.split("\\s".toRegex())) {
+        val parse = x.toIntOrNull()
+        if (parse != null) {
+            list.add(parse)
+        }
+    }
 
-//    val pruned = prune(ast, list)
-//    print(pruned.toDafny())
+    val pruned = prune(ast, list)
+    val prunedFile = File(TMP_DIR + "p_" + file.name)
+    prunedFile.writeText(pruned.toDafny())
+
+    val pruneResult = runner.runDafny(prunedFile, File(WORKING_DIR), "verify") ?: throw Exception()
+    val verifyAndError = mutableListOf<Int>()
+    for (tok in pruneResult.split("\\s".toRegex())) {
+        val parse = tok.toIntOrNull()
+        if (parse != null) {
+            verifyAndError.add(parse)
+        }
+    }
+    if (verifyAndError.size != 2 || verifyAndError[1] != 0) {
+        println("ERROR in file ${file.absoluteFile}")
+    }
 }
 

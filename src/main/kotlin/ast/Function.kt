@@ -9,9 +9,9 @@ data class FunctionDeclaration(
 ): ASTNode {
     override fun toDafny(): String {
         var ret = "function "
-        if (!isPure) {
-            ret += "method "
-        }
+//        if (!isPure) {
+//            ret += "method "
+//        }
         ret += name
         ret += functionSignature.toDafny()
         ret += "\n"

@@ -10,7 +10,8 @@ data class BlockStatement (
 ): StatementNode {
     override fun toDafny(): String {
 //        val prefix = addTabs()
-        val printStr = "print \"block\", $ident, \"\\n\";\n"
+//        val printStr = "print \"block\", $ident, \"\\n\";\n"
+        val printStr = "print $ident, \"\\n\";\n"
         return "{ " + (if (printIdent) printStr else "") + statements.joinToString("\n") { stat -> stat.toDafny() } + " }"
     }
 

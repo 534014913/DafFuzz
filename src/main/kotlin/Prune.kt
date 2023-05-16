@@ -25,24 +25,34 @@ fun addPrint(blockStatement: BlockStatement) {
     }
 }
 
-fun prune(dafny: Dafny, upBlocks: IntArray): Dafny {
-    val method = dafny.toplevel[0].classMember.method
-    val body = method!!.blockStatement
-    val prunedBody = pruneHelper(body, upBlocks)
-    val newMethod = method.copy(blockStatement = prunedBody as BlockStatement)
+fun prune(dafny: Dafny, upBlocks: List<Int>): Dafny {
+    val newToplevelDecl = mutableListOf<TopDeclaration>()
+    for (topl in dafny.toplevel) {
+        if (!topl.classMember.isMethod) {
+            newToplevelDecl.add(topl.copy())
+        } else {
+            val method = topl.classMember.method
+            val body = method!!.blockStatement
+            val prunedBody = pruneHelper(body, upBlocks)
+            val newMethod = method.copy(blockStatement = prunedBody as BlockStatement)
+            val newTopl = topl.copy()
+            newTopl.classMember.method = newMethod
+            newToplevelDecl.add(newTopl)
+        }
+    }
     val newDafny = dafny.copy()
-    newDafny.toplevel[0].classMember.method = newMethod
+    newDafny.toplevel = newToplevelDecl
     return newDafny
 }
 
-fun pruneHelper(stmt: StatementNode, upBlocks: IntArray): StatementNode {
+fun pruneHelper(stmt: StatementNode, upBlocks: List<Int>): StatementNode {
     return when (stmt) {
         is BlockStatement -> {
-            println("----------------${stmt.ident}------------------")
-            println(stmt.toDafny())
-            println("-----------------------------------------------")
-            if (stmt.ident !in upBlocks) BlockStatement(emptyList(), 0) else {
-                BlockStatement(statements = stmt.statements.toList().map {x -> pruneHelper(x, upBlocks)}, 0)
+//            println("----------------${stmt.ident}------------------")
+//            println(stmt.toDafny())
+//            println("-----------------------------------------------")
+            if (stmt.ident !in upBlocks) BlockStatement(emptyList(), stmt.ident, true) else {
+                BlockStatement(statements = stmt.statements.toList().map {x -> pruneHelper(x, upBlocks)}, stmt.ident, true)
             }
         }
 
