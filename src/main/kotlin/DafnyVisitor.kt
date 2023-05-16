@@ -93,10 +93,10 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
     override fun visitBlockStmt(ctx: DafnyParser.BlockStmtContext?): BlockStatement {
         if (ctx == null) throw Exception("no block")
         val statements: MutableList<StatementNode> = mutableListOf()
+        ident++
         for (statement in ctx.stmt()) {
             statements.add(visitNonLabeledStmt(statement.nonLabeledStmt()))
         }
-        ident++
         return BlockStatement(statements, ident)
     }
 
@@ -322,11 +322,11 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitImpliesExpliesExpression(ctx: DafnyParser.ImpliesExpliesExpressionContext?): ImpliesExpliesExpression {
         if (ctx == null) throw Exception()
-        val isSimplest = ctx.IMPLIESOP() == null && ctx.EXPLIESOP() == null
-        if (isSimplest) {
-            println("SIMPLEST")
-            println(ctx.text)
-        }
+        val isSimplest = ctx.IMPLIESOP() == null && ctx.EXPLIESOP().isEmpty()
+//        if (isSimplest) {
+////            println("SIMPLEST")
+////            println(ctx.text)
+//        }
         val isImplies = ctx.IMPLIESOP() != null
         val firstLogical = visitLogicalExpression(ctx.logicalExpression(0))
         var implies: ImpliesExpression? = null

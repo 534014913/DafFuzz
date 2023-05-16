@@ -7,6 +7,10 @@ import java.io.File
 import java.io.FileInputStream
 import kotlin.system.exitProcess
 
+const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
+const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
+const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
+
 fun main(args: Array<String>) {
     if (args[0] == "directory") {
         processDir(args)
@@ -52,11 +56,17 @@ fun main(args: Array<String>) {
 
 fun processDir(args: Array<String>) {
     val dir = args[1]
+    println(dir)
     val file = File(dir)
-    file.walkTopDown().forEach { processDafny(it) }
+    val runner = DafnyRunner(DAFNY_PATH)
+//    file.walkTopDown().forEach { processDafny(it) }
+    file.walkTopDown().forEach { processDafny(it, runner) }
 }
 
-fun processDafny(file: File) {
+fun processDafny(file: File, runner: DafnyRunner) {
+    if (!file.isFile) {
+        return
+    }
     val streamedInFile = FileInputStream(file);
     val input = CharStreams.fromStream(streamedInFile)
     streamedInFile.close();
@@ -71,15 +81,16 @@ fun processDafny(file: File) {
         exitProcess(1)
     }
 
-    println("Reaching ast")
     val ast = DafnyVisitor.makeAST(parserTree)
 
     addInstrumentation(ast);
 
-    print(ast.toDafny())
+    val tmp = File(TMP_DIR + "t_" + file.name)
+    tmp.writeText(ast.toDafny())
 
-    val list = intArrayOf(2, 3)
-    val pruned = prune(ast, list)
-    print(pruned.toDafny())
+    println(runner.runDafny(tmp, File(WORKING_DIR), "run", "/functionSyntax:3"))
+
+//    val pruned = prune(ast, list)
+//    print(pruned.toDafny())
 }
 

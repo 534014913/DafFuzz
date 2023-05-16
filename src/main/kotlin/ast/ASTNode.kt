@@ -103,7 +103,7 @@ data class IdentType(
     val type: TypeNode,
 ): ASTNode {
     override fun toDafny(): String {
-        TODO("Not yet implemented")
+        return "$ident : ${type.toDafny()}"
     }
 }
 
@@ -148,7 +148,7 @@ data class Lhs(
 ): ASTNode{
     override fun toDafny(): String {
         var ret = primary.toDafny()
-        ret += suffixes.joinToString { x -> x.toDafny() }
+        ret += suffixes.joinToString("") { x -> x.toDafny() }
         return ret
     }
 }

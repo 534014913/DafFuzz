@@ -13,7 +13,7 @@ data class PrimaryExpressionWithSuffix(
         } else if (primary is EndlessExpression) {
             primary.toDafny()
         } else {
-            "${primary.toDafny()}${suffix.joinToString { x -> x.toDafny() }}"
+            "${primary.toDafny()}${suffix.joinToString("") { x -> x.toDafny() }}"
         }
     }
 }

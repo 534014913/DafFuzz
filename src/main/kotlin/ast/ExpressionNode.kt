@@ -32,7 +32,7 @@ data class ImpliesExpliesExpression(
         } else if (isImplies) {
             "${logical.toDafny()} ==> ${implies?.toDafny() ?: ""}"
         } else {
-            "${logical.toDafny()} ${explies!!.joinToString(" <== ") { x -> x.toDafny() }}"
+            "${logical.toDafny()} <== ${explies!!.joinToString(" <== ") { x -> x.toDafny() }}"
         }
     }
 }

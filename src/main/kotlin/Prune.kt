@@ -1,10 +1,12 @@
 import ast.*
 
 fun addInstrumentation(dafny: Dafny) {
-    if (!dafny.toplevel[0].classMember.isMethod) return
-    val method = dafny.toplevel[0].classMember.method
-    val body = method!!.blockStatement;
-    addPrint(body)
+    for (topl in dafny.toplevel) {
+        if (!topl.classMember.isMethod) {
+            continue
+        }
+        addPrint(topl.classMember.method!!.blockStatement)
+    }
 }
 
 fun addPrint(blockStatement: BlockStatement) {

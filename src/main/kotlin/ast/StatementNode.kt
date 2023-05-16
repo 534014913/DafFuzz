@@ -74,7 +74,7 @@ data class IfStatement(
     val elseClause: ElseSubStatement?,
 ): StatementNode{
     override fun toDafny(): String {
-        return "if (${guard.toDafny()}) {\n${thenClause.toDafny()}\n}" + (if (elseClause != null) " else {\n${elseClause.toDafny()}\n}" else "\n")
+        return "if (${guard.toDafny()}) \n${thenClause.toDafny()}\n" + (if (elseClause != null) " else \n${elseClause.toDafny()}\n" else "\n")
     }
 }
 
