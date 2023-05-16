@@ -12,7 +12,7 @@ data class BoolNode(
 ): TypeNode {}
 
 data class CharNode(
-    override val baseString: String = "bool"
+    override val baseString: String = "char"
 ): TypeNode {}
 
 data class IntNode(

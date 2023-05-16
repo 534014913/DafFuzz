@@ -141,3 +141,14 @@ data class Expressions(
         return expressions.joinToString(", ") { x -> x.toDafny() }
     }
 }
+
+data class Lhs(
+    val primary: PrimaryExpression,
+    val suffixes: List<Suffix>
+): ASTNode{
+    override fun toDafny(): String {
+        var ret = primary.toDafny()
+        ret += suffixes.joinToString { x -> x.toDafny() }
+        return ret
+    }
+}

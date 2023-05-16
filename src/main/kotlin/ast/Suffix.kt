@@ -46,7 +46,7 @@ data class SequenceUpdateSuffix(
     val lateExp: DafnyExpression
 ) : Suffix {
     override fun toDafny(): String {
-        return "[${exp.toDafny()} := ${exp.toDafny()}]"
+        return "[${exp.toDafny()} := ${lateExp.toDafny()}]"
     }
 }
 

@@ -12,7 +12,7 @@ fun main(args: Array<String>) {
         processDir(args)
         return
     }
-    val programName: String = args[0];
+    val programName: String = args[0]
     println(programName)
 
     val inFile: File = File(programName)
@@ -39,14 +39,15 @@ fun main(args: Array<String>) {
     println("Reaching ast")
     val ast = DafnyVisitor.makeAST(parserTree)
 
-    addInstrumentation(ast);
+//    addInstrumentation(ast);
 
     print(ast.toDafny())
+    File("a.dfy").writeText(ast.toDafny())
 
-    println("\n----------------------------------")
-    val list = intArrayOf(2, 3)
-    val pruned = prune(ast, list)
-    print(pruned.toDafny())
+//    println("\n----------------------------------")
+//    val list = intArrayOf(2, 3)
+//    val pruned = prune(ast, list)
+//    print(pruned.toDafny())
 }
 
 fun processDir(args: Array<String>) {

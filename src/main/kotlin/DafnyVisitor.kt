@@ -1,4 +1,3 @@
-
 import antlr.DafnyParser
 import antlr.DafnyParserBaseVisitor
 import ast.*
@@ -123,51 +122,86 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitAssertStmt(ctx: DafnyParser.AssertStmtContext?): AssertStatement {
         if (ctx == null) throw Exception()
-        val text = ctx.expression().text
-        return AssertStatement(null, text)
+        val expr = visitExpression(ctx.expression())
+        return AssertStatement(expr)
     }
+
 
     override fun visitIfStmt(ctx: DafnyParser.IfStmtContext?): IfStatement {
         if (ctx == null) throw Exception()
+        val guard = visitExpression(ctx.guard().expression())
         val elseClause =
             if (ctx.elseSubStmt() == null) null else visitElseSubStmt(ctx.elseSubStmt())
-        return IfStatement(ctx.guard().text, visitBlockStmt(ctx.blockStmt()), elseClause, "")
+        return IfStatement(guard, visitBlockStmt(ctx.blockStmt()), elseClause)
     }
 
     override fun visitElseSubStmt(ctx: DafnyParser.ElseSubStmtContext?): ElseSubStatement {
         if (ctx == null) throw Exception()
         val blockStmt = visitBlockStmt(ctx.blockStmt())
-        return ElseSubStatement(blockStmt, "")
+        return ElseSubStatement(blockStmt)
     }
 
 
     override fun visitUpdateStmt(ctx: DafnyParser.UpdateStmtContext?): UpdateStatement {
         if (ctx == null) throw Exception()
-        return UpdateStatement(null, null, ctx.text)
+        val hasGets = ctx.GETS() != null
+        val lhss = mutableListOf<Lhs>()
+        for (l in ctx.lhs()) {
+            lhss.add(visitLhs(l))
+        }
+        val rhss = mutableListOf<DafnyExpression>()
+        for (expr in ctx.rhs()) {
+            rhss.add(visitExpression(expr.expression()))
+        }
+        return UpdateStatement(hasGets, lhss, rhss)
+    }
+
+    override fun visitLhs(ctx: DafnyParser.LhsContext?): Lhs {
+        if (ctx == null) throw Exception()
+        val primary: PrimaryExpression = if (ctx.nameSegment() != null) {
+           visitNameSegment(ctx.nameSegment())
+        } else {
+            assert(ctx.constAtomExpression() != null)
+            visitConstAtomExpression(ctx.constAtomExpression())
+        }
+        val suffixes = mutableListOf<Suffix>()
+        for (suf in ctx.suffix()) {
+            suffixes.add(visitSuffix(suf))
+        }
+        return Lhs(primary, suffixes)
     }
 
     override fun visitPrintStmt(ctx: DafnyParser.PrintStmtContext?): PrintStatement {
         if (ctx == null) throw Exception()
-        return PrintStatement(null, ctx.text)
+        val exprList = mutableListOf<DafnyExpression>()
+        for (expr in ctx.expression()) {
+            exprList.add(visitExpression(expr))
+        }
+        return PrintStatement(exprList)
     }
 
     override fun visitReturnStmt(ctx: DafnyParser.ReturnStmtContext?): ReturnStatement {
         if (ctx == null) throw Exception()
-        return ReturnStatement(null, ctx.text)
+        val exprList = mutableListOf<DafnyExpression>()
+        for (rh in ctx.rhs()) {
+            exprList.add(visitExpression(rh.expression()))
+        }
+        return ReturnStatement(exprList)
     }
 
     override fun visitVarDeclStmt(ctx: DafnyParser.VarDeclStmtContext?): VariableDeclarationStatement {
         if (ctx == null) throw Exception()
+        val hasGets = ctx.GETS() != null
         val lhs = mutableListOf<LocalIdentTypeOptional>()
         for (localIdent in ctx.localIdentTypeOptional()) {
             lhs.add(visitLocalIdentTypeOptional(localIdent))
         }
-        val rhsExpressions = mutableListOf<ExpressionNode>()
+        val rhsExpressions = mutableListOf<DafnyExpression>()
         for (rh in ctx.rhs()) {
             val ex = rh.expression()
             rhsExpressions.add(visitExpression(ex))
         }
-        return VariableDeclarationStatement(lhs, rhsExpressions, "")
+        return VariableDeclarationStatement(hasGets, lhs, rhsExpressions)
     }
 
     override fun visitFunctionDeclaration(ctx: DafnyParser.FunctionDeclarationContext?): FunctionDeclaration {
@@ -198,13 +232,17 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitFunctionBody(ctx: DafnyParser.FunctionBodyContext?): FunctionBody {
         if (ctx == null) throw Exception()
-        return FunctionBody(ctx.text)
+        val expr = visitExpression(ctx.expression())
+        return FunctionBody(expr)
     }
 
     override fun visitLocalIdentTypeOptional(ctx: DafnyParser.LocalIdentTypeOptionalContext?): LocalIdentTypeOptional {
         if (ctx == null) throw Exception()
         val ident = ctx.wildIdent().ident().text
-        val type: TypeNode = visitType(ctx.type())
+        var type: TypeNode? = null
+        if (ctx.type() != null) {
+            type = visitType(ctx.type())
+        }
         return LocalIdentTypeOptional(ident, type)
     }
 
@@ -590,7 +628,7 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
                 innerExpressions.add(visitExpression(expr))
             }
         }
-        val secColon = ctx.secCOLON().COLON() != null
+        val secColon = ctx.secCOLON() != null
         return SliceByLengthSuffix(exp, hasInner, innerExpressions, secColon)
     }
 
@@ -647,7 +685,9 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
         var expressions: Expressions? = null
         var expression: DafnyExpression? = null
         if (isFirst) {
-            expressions = visitExpressions(ctx.expressions())
+            if (ctx.expressions() != null) {
+                expressions = visitExpressions(ctx.expressions())
+            }
         } else {
             expression = visitExpression(ctx.expression())
         }
@@ -703,7 +743,7 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitLiteralExpression(ctx: DafnyParser.LiteralExpressionContext?): LiteralExpression {
         if (ctx == null) throw Exception()
-        val text : String = if (ctx.FALSE() != null) {
+        val text: String = if (ctx.FALSE() != null) {
             "false"
         } else if (ctx.TRUE() != null) {
             "true"

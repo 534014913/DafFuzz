@@ -66,7 +66,7 @@ elseSubStmt: ELSE (blockStmt);
 
 guard: (expression);
 
-updateStmt: lhs ((COMMA lhs)* (GETS rhs (COMMA rhs)*)) SEMICOLON;
+updateStmt: lhs (COMMA lhs)* (GETS rhs (COMMA rhs)*) SEMICOLON;
 
 varDeclStmt: VAR localIdentTypeOptional (COMMA localIdentTypeOptional)* (GETS rhs (COMMA rhs)*)? SEMICOLON;
 
@@ -75,7 +75,7 @@ returnStmt: RETURN (rhs (COMMA rhs)*)? SEMICOLON;
 printStmt: PRINT expression (COMMA expression)* SEMICOLON;
 
 // LHS RHS
-lhs: (nameSegment (suffix)* | constAtomExpression suffix (suffix)*);
+lhs: nameSegment (suffix)* | constAtomExpression suffix (suffix)*;
 
 rhs: expression;
 

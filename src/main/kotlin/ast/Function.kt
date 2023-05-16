@@ -1,8 +1,5 @@
 package ast
 
-class Function {
-}
-
 data class FunctionDeclaration(
     val isPure: Boolean,
     val name: String,
@@ -11,7 +8,16 @@ data class FunctionDeclaration(
     val functionBody: FunctionBody
 ): ASTNode {
     override fun toDafny(): String {
-        TODO("Not yet implemented")
+        var ret = "function "
+        if (!isPure) {
+            ret += "method "
+        }
+        ret += name
+        ret += functionSignature.toDafny()
+        ret += "\n"
+        ret += functionSpecification.toDafny()
+        ret += functionBody.toDafny()
+        return ret
     }
 }
 
@@ -32,10 +38,10 @@ data class FunctionSpecification(
 }
 
 data class FunctionBody(
-    val text: String
+    val expr: DafnyExpression
 ): ASTNode {
     override fun toDafny(): String {
-        return text
+        return "{ ${expr.toDafny()} }"
     }
 }
 
