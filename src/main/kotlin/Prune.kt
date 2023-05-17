@@ -10,13 +10,13 @@ fun addInstrumentation(dafny: Dafny) {
 }
 
 fun addPrint(blockStatement: BlockStatement) {
-    blockStatement.enablePrint();
-    for (statementNode in blockStatement.statements) {
-        when (statementNode) {
-            is BlockStatement -> addPrint(statementNode)
+    blockStatement.enablePrint()
+    for (dafnyStmt in blockStatement.statements) {
+        when (dafnyStmt.nonLabelStmt) {
+            is BlockStatement -> addPrint(dafnyStmt.nonLabelStmt)
             is IfStatement -> {
-                addPrint(statementNode.thenClause); if (statementNode.elseClause != null) {
-                    addPrint(statementNode.elseClause.block)
+                addPrint(dafnyStmt.nonLabelStmt.thenClause); if (dafnyStmt.nonLabelStmt.elseClause != null) {
+                    addPrint(dafnyStmt.nonLabelStmt.elseClause.block)
                 }
             }
 
@@ -33,8 +33,8 @@ fun prune(dafny: Dafny, upBlocks: List<Int>): Dafny {
         } else {
             val method = topl.classMember.method
             val body = method!!.blockStatement
-            val prunedBody = pruneHelper(body, upBlocks)
-            val newMethod = method.copy(blockStatement = prunedBody as BlockStatement)
+            val prunedBody = pruneHelperMiddle(body, upBlocks)
+            val newMethod = method.copy(blockStatement = prunedBody)
             val newTopl = topl.copy()
             newTopl.classMember.method = newMethod
             newToplevelDecl.add(newTopl)
@@ -45,6 +45,15 @@ fun prune(dafny: Dafny, upBlocks: List<Int>): Dafny {
     return newDafny
 }
 
+fun pruneHelperMiddle(stmt: BlockStatement, upBlocks: List<Int>): BlockStatement {
+    val newStmts = mutableListOf<DafnyStatement>()
+    for (ds in stmt.statements) {
+        val pruned = pruneHelper(ds.nonLabelStmt, upBlocks)
+        newStmts.add(ds.copy(nonLabelStmt =  pruned))
+    }
+    return stmt.copy(statements = newStmts)
+}
+
 fun pruneHelper(stmt: StatementNode, upBlocks: List<Int>): StatementNode {
     return when (stmt) {
         is BlockStatement -> {
@@ -52,7 +61,7 @@ fun pruneHelper(stmt: StatementNode, upBlocks: List<Int>): StatementNode {
 //            println(stmt.toDafny())
 //            println("-----------------------------------------------")
             if (stmt.ident !in upBlocks) BlockStatement(emptyList(), stmt.ident, true) else {
-                BlockStatement(statements = stmt.statements.toList().map {x -> pruneHelper(x, upBlocks)}, stmt.ident, true)
+                pruneHelperMiddle(stmt, upBlocks)
             }
         }
 
@@ -68,6 +77,7 @@ fun pruneHelper(stmt: StatementNode, upBlocks: List<Int>): StatementNode {
         is ReturnStatement -> stmt.copy()
         is UpdateStatement -> stmt.copy()
         is VariableDeclarationStatement -> stmt.copy()
+        is DafnyStatement -> throw Exception("shouled now visit DafnyStatement")
     }
 }
 

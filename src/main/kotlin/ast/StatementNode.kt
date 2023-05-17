@@ -4,7 +4,7 @@ sealed interface StatementNode: ASTNode {
 }
 
 data class BlockStatement (
-    val statements: List<StatementNode>,
+    val statements: List<DafnyStatement>,
     val ident: Int,
     var printIdent: Boolean = false,
 ): StatementNode {
@@ -17,6 +17,20 @@ data class BlockStatement (
 
     fun enablePrint() {
         printIdent = true
+    }
+}
+
+data class DafnyStatement(
+    val label: String?,
+    val nonLabelStmt: StatementNode
+): StatementNode {
+    override fun toDafny(): String {
+        var ret = ""
+        if (label != null) {
+            ret += "label $label: "
+        }
+        ret += nonLabelStmt.toDafny()
+        return ret
     }
 }
 
@@ -73,7 +87,7 @@ data class IfStatement(
     val guard: DafnyExpression,
     val thenClause: BlockStatement,
     val elseClause: ElseSubStatement?,
-): StatementNode{
+): StatementNode {
     override fun toDafny(): String {
         return "if (${guard.toDafny()}) \n${thenClause.toDafny()}\n" + (if (elseClause != null) " else \n${elseClause.toDafny()}\n" else "\n")
     }
@@ -81,7 +95,7 @@ data class IfStatement(
 
 data class ElseSubStatement(
     val block: BlockStatement,
-): StatementNode{
+): StatementNode {
     override fun toDafny(): String {
         return block.toDafny()
     }

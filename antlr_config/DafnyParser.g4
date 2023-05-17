@@ -46,7 +46,7 @@ functionBody: LBRACE expression RBRACE;
 // Statements
 blockStmt: LBRACE (stmt)* RBRACE;
 
-stmt: nonLabeledStmt;
+stmt: (LABEL labelName COLON)? nonLabeledStmt;
 
 nonLabeledStmt: (blockStmt
     | ifStmt

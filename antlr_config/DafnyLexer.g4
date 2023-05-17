@@ -79,6 +79,7 @@ GREATER: '>';
 NOTEQ: '!=';
 
 // SPECIAL
+LABEL: 'label';
 METHOD: 'method';
 FUNCTION: 'function';
 RETURNS: 'returns';

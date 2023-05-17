@@ -9,6 +9,7 @@ import kotlin.system.exitProcess
 
 const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
 const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
+//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
 const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
 
 fun main(args: Array<String>) {
@@ -19,16 +20,16 @@ fun main(args: Array<String>) {
     val programName: String = args[0]
     println(programName)
 
-    val inFile: File = File(programName)
+    val inFile = File(programName)
     if (!inFile.exists()) {
         println(inFile.path)
-        println("File not fund");
-        exitProcess(1);
+        println("File not fund")
+        exitProcess(1)
     }
 
-    val streamedInFile = FileInputStream(inFile);
+    val streamedInFile = FileInputStream(inFile)
     val input = CharStreams.fromStream(streamedInFile)
-    streamedInFile.close();
+    streamedInFile.close()
 
     val lexer = DafnyLexer(input)
     val tokens = CommonTokenStream(lexer)
@@ -68,9 +69,9 @@ fun processDafny(file: File, runner: DafnyRunner) {
         return
     }
     println("Processing ${file.name}")
-    val streamedInFile = FileInputStream(file);
+    val streamedInFile = FileInputStream(file)
     val input = CharStreams.fromStream(streamedInFile)
-    streamedInFile.close();
+    streamedInFile.close()
 
     val lexer = DafnyLexer(input)
     val tokens = CommonTokenStream(lexer)
@@ -84,13 +85,20 @@ fun processDafny(file: File, runner: DafnyRunner) {
 
     val ast = DafnyVisitor.makeAST(parserTree)
 
-    addInstrumentation(ast);
+    addInstrumentation(ast)
 
     val tmp = File(TMP_DIR + "t_" + file.name)
     tmp.writeText(ast.toDafny())
 
 //    println(runner.runDafny(tmp, File(WORKING_DIR), "run", "/functionSyntax:3"))
     val res: String = runner.runDafny(tmp, File(WORKING_DIR), "run") ?: throw Exception()
+//    if (res.first(Error))
+    if (res.contains("Error".toRegex())) {
+        println("\t" + file.name + " has Error in annotation, aborting...")
+        return
+    }
+//    println("----------------parse result-------------------")
+//    println(res)
 //    print(res)
     val list = mutableListOf<Int>()
     for (x in res.split("\\s".toRegex())) {
@@ -105,6 +113,8 @@ fun processDafny(file: File, runner: DafnyRunner) {
     prunedFile.writeText(pruned.toDafny())
 
     val pruneResult = runner.runDafny(prunedFile, File(WORKING_DIR), "verify") ?: throw Exception()
+//    println("-----------------prune result---------------------")
+//    println(pruneResult)
     val verifyAndError = mutableListOf<Int>()
     for (tok in pruneResult.split("\\s".toRegex())) {
         val parse = tok.toIntOrNull()
@@ -113,7 +123,7 @@ fun processDafny(file: File, runner: DafnyRunner) {
         }
     }
     if (verifyAndError.size != 2 || verifyAndError[1] != 0) {
-        println("ERROR in file ${file.absoluteFile}")
+        println("\tERROR in file ${file.absoluteFile}")
     }
 }
 

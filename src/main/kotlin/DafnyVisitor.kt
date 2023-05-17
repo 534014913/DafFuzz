@@ -93,13 +93,19 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitBlockStmt(ctx: DafnyParser.BlockStmtContext?): BlockStatement {
         if (ctx == null) throw Exception("no block")
-        val statements: MutableList<StatementNode> = mutableListOf()
+        val statements: MutableList<DafnyStatement> = mutableListOf()
         val oldIdent = ident
         ident++
         for (statement in ctx.stmt()) {
-            statements.add(visitNonLabeledStmt(statement.nonLabeledStmt()))
+            statements.add(visitStmt(statement))
         }
         return BlockStatement(statements, oldIdent)
+    }
+
+    override fun visitStmt(ctx: DafnyParser.StmtContext?): DafnyStatement {
+        if (ctx == null) throw Exception()
+        val label = if (ctx.LABEL() != null) ctx.labelName().ident().IDENT().text else null
+        return DafnyStatement(label, visitNonLabeledStmt(ctx.nonLabeledStmt()))
     }
 
     override fun visitNonLabeledStmt(ctx: DafnyParser.NonLabeledStmtContext?): StatementNode {
