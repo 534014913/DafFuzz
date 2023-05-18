@@ -1,0 +1,4 @@
+package fuzzer
+
+class Fuzzer {
+}

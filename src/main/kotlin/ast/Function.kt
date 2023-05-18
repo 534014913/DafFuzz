@@ -6,7 +6,7 @@ data class FunctionDeclaration(
     val functionSignature: FunctionSignature,
     val functionSpecification: FunctionSpecification,
     val functionBody: FunctionBody
-): ASTNode {
+): CloneableASTNode, DafnyDeclaration {
     override fun toDafny(): String {
         var ret = "function "
 //        if (!isPure) {
@@ -23,7 +23,7 @@ data class FunctionDeclaration(
 
 data class FunctionSignature(
     val text: String
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return text
     }
@@ -31,7 +31,7 @@ data class FunctionSignature(
 
 data class FunctionSpecification(
     val text: String
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return text
     }
@@ -39,7 +39,7 @@ data class FunctionSpecification(
 
 data class FunctionBody(
     val expr: DafnyExpression
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return "{ ${expr.toDafny()} }"
     }

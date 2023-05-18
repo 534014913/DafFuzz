@@ -1,6 +1,6 @@
 package ast
 
-sealed interface ExpressionNode : ASTNode {
+sealed interface ExpressionNode : CloneableASTNode {
 }
 
 data class DafnyExpression(
@@ -8,6 +8,10 @@ data class DafnyExpression(
 ) : ExpressionNode {
     override fun toDafny(): String {
         return impliesExplies.joinToString(" <==> ") { x -> x.toDafny() }
+    }
+
+    override fun clone(): DafnyExpression {
+        return DafnyExpression(impliesExplies.map { it.clone() as ImpliesExpliesExpression })
     }
 }
 
@@ -49,6 +53,7 @@ data class ImpliesExpression(
             "${logical.toDafny()} ==> ${implies!!.toDafny()}"
         }
     }
+
 }
 
 data class LogicalExpression(
@@ -69,6 +74,10 @@ data class LogicalExpression(
             i++
         }
         return ret
+    }
+
+    override fun clone(): LogicalExpression {
+
     }
 }
 
@@ -97,7 +106,7 @@ data class RelationalExpression(
     }
 }
 
-enum class LogicalOperator : ASTNode {
+enum class LogicalOperator : NonCloneableASTNode {
     AND_OP {
         override fun toDafny(): String {
             return "&&"
@@ -110,7 +119,7 @@ enum class LogicalOperator : ASTNode {
     }
 }
 
-enum class RelationalOperator : ASTNode {
+enum class RelationalOperator : NonCloneableASTNode {
     EQ {
         override fun toDafny(): String {
             return "=="
@@ -207,7 +216,7 @@ data class AsExpression(
     }
 }
 
-enum class BinaryOperator : ASTNode {
+enum class BinaryOperator : NonCloneableASTNode {
     ADD {
         override fun toDafny(): String {
             return "+"
@@ -269,7 +278,7 @@ data class UnaryExpression(
     }
 }
 
-enum class UnaryOperator: ASTNode {
+enum class UnaryOperator: NonCloneableASTNode {
     SUB {
         override fun toDafny(): String {
             return "-"
@@ -282,7 +291,7 @@ enum class UnaryOperator: ASTNode {
     }
 }
 
-enum class AsOperator : ASTNode {
+enum class AsOperator : NonCloneableASTNode {
     AS {
         override fun toDafny(): String {
             return "as"

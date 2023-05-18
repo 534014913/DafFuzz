@@ -1,6 +1,6 @@
 package ast
 
-sealed interface Suffix : ASTNode {
+sealed interface Suffix : CloneableASTNode {
 }
 
 data class SelectionSuffix(

@@ -2,12 +2,26 @@ package ast
 
 sealed interface ASTNode {
     fun toDafny(): String
+
+//    fun walk(symbolTable: SymbolTable, dafnyWalker: DafnyWalker)
+}
+
+sealed interface CloneableASTNode : ASTNode {
+    fun clone(): CloneableASTNode
+}
+
+sealed interface NonCloneableASTNode: ASTNode {
+
+}
+
+sealed interface DafnyDeclaration {
+
 }
 
 data class Dafny(
     val includes: List<IncludeDirective>,
     var toplevel: List<TopDeclaration>,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return includes.joinToString("\n") { x -> x.toDafny() } +
                 toplevel.joinToString("\n") { x -> x.toDafny() }
@@ -16,7 +30,7 @@ data class Dafny(
 
 data class IncludeDirective(
     val includeToken: String,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return "include $includeToken"
     }
@@ -25,7 +39,7 @@ data class IncludeDirective(
 data class TopDeclaration(
     val declModifiers: List<DeclarationModifier>,
     val classMember: ClassMemberDeclaration,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return declModifiers.joinToString(" ") {x -> x.toDafny()} + (if (declModifiers.isEmpty()) "" else " ") +  classMember.toDafny()
     }
@@ -39,7 +53,7 @@ enum class DeclarationModifierEnum {
 }
 data class DeclarationModifier(
     val modifier: DeclarationModifierEnum,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return "$modifier".lowercase()
     }
@@ -49,7 +63,7 @@ data class ClassMemberDeclaration(
     var isMethod: Boolean,
     var method: MethodDeclaration?,
     var function: FunctionDeclaration?,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return if (isMethod) {
             method!!.toDafny()
@@ -64,19 +78,18 @@ data class MethodDeclaration(
     val methodSignature: MethodSignature,
     val methodSpec: MethodSpecification,
     val blockStatement: BlockStatement
-): ASTNode {
+): CloneableASTNode, DafnyDeclaration {
     override fun toDafny(): String {
         return "method $methodName${methodSignature.toDafny()}\n${methodSpec.toDafny()}{\n${blockStatement.toDafny()}\n}"
     }
 }
 
 data class MethodSignature(
-    val formals: List<Formal>?,
-    val returnFormals: List<Formal>?,
-    val text: String
-): ASTNode {
+    val formals: Formals,
+    val returnFormals: Formals?,
+): CloneableASTNode {
     override fun toDafny(): String {
-        return text
+        return formals.toDafny() + " returns ${returnFormals?.toDafny() ?: ""}"
     }
 }
 
@@ -84,24 +97,27 @@ data class MethodSpecification(
     val requires: List<RequireClause>?,
     val ensures: List<EnsureClause>?,
     val text: String
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
+//        var ret = requires.joinToString ("\n") { it.toDafny() }
+//        ret += ensures.joinToString("\n") { it.toDafny() }
+//        return ret
         return text
     }
 }
 
-data class Formal(
+data class Formals(
     val identTypes: List<IdentType>,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
-        TODO("Not yet implemented")
+        return "(${identTypes.joinToString(", ") { it.toDafny() }})"
     }
 }
 
 data class IdentType(
     val ident: String,
     val type: TypeNode,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return "$ident : ${type.toDafny()}"
     }
@@ -109,7 +125,7 @@ data class IdentType(
 
 data class RequireClause (
     val expression: ExpressionNode,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         TODO("Not yet implemented")
     }
@@ -117,7 +133,7 @@ data class RequireClause (
 
 data class EnsureClause (
     val expression: ExpressionNode,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         TODO("Not yet implemented")
     }
@@ -128,7 +144,7 @@ data class EnsureClause (
 data class LocalIdentTypeOptional(
    val ident: String,
    val typeNode: TypeNode?,
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return "$ident ${if (typeNode == null) "" else ": ${typeNode.toDafny()}"}"
     }
@@ -136,7 +152,7 @@ data class LocalIdentTypeOptional(
 
 data class Expressions(
     val expressions: List<DafnyExpression>
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return expressions.joinToString(", ") { x -> x.toDafny() }
     }
@@ -145,7 +161,7 @@ data class Expressions(
 data class Lhs(
     val primary: PrimaryExpression,
     val suffixes: List<Suffix>
-): ASTNode{
+): CloneableASTNode{
     override fun toDafny(): String {
         var ret = primary.toDafny()
         ret += suffixes.joinToString("") { x -> x.toDafny() }

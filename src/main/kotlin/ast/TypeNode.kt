@@ -1,6 +1,6 @@
 package ast
 
-sealed interface TypeNode : ASTNode {
+sealed interface TypeNode : CloneableASTNode {
     val baseString: String
     override fun toDafny(): String {
         return baseString
@@ -41,7 +41,7 @@ data class NatNode(
 
 data class GenericInstantiation(
     val types: List<TypeNode>
-) : ASTNode {
+) : CloneableASTNode {
     override fun toDafny(): String {
         return "<${types.joinToString(", ") { x -> x.toDafny() }}>"
     }

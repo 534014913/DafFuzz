@@ -2,9 +2,33 @@ package ast
 //almost identical to the design in RustSmith
 
 data class SymbolTable(
-   val parent: SymbolTable?
-): Iterable<SymbolTable> {
+    val parent: SymbolTable?,
+    val methodSymbolTable: MethodSymbolTable,
+    val globalSymbolTable: GlobalSymbolTable,
+    val symbolMap: MutableMap<String, IdentifierData> = mutableMapOf()
+) : Iterable<SymbolTable> {
     override fun iterator() = SymbolTableIterator(this)
+
+    operator fun get(key: String): IdentifierData? {
+        return symbolMap[key]
+    }
+
+    operator fun set(key: String, value: IdentifierData) {
+        symbolMap[key] = value
+    }
+
+    fun getLocalVariables(): Set<String> {
+        return symbolMap.keys
+    }
+
+    fun getCurrentVariables(): Set<String> {
+        val currentVariables = mutableSetOf<String>()
+        for (table in iterator()) {
+            currentVariables.addAll(table.symbolMap.keys)
+        }
+        return currentVariables
+    }
+
 }
 
 data class IdentifierData(
@@ -15,6 +39,35 @@ data class IdentifierData(
 ) {
     fun clone(): IdentifierData {
         return this.copy(type = type.clone())
+    }
+}
+
+class MethodSymbolTable {
+    private val symbolMap = mutableMapOf<String, IdentifierData>()
+    val methods = mutableListOf<DafnyDeclaration>()
+
+    operator fun get(key: String): IdentifierData? {
+        return symbolMap[key]
+    }
+
+    operator fun set(key: String, value: IdentifierData) {
+        symbolMap[key] = value
+    }
+
+    fun addFunction(dafnyDeclaration: DafnyDeclaration) {
+        methods.add(dafnyDeclaration)
+    }
+}
+
+class GlobalSymbolTable {
+    private val symbolMap = mutableMapOf<String, IdentifierData>()
+
+    operator fun get(key: String): IdentifierData? {
+        return symbolMap[key]
+    }
+
+    operator fun set(key: String, value: IdentifierData) {
+        symbolMap[key] = value
     }
 }
 

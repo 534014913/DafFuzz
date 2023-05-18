@@ -127,7 +127,7 @@ data class CardinalityExpression(
 
 data class TupleArgs(
     val bindings: List<DafnyExpression>
-): ASTNode {
+): CloneableASTNode {
     override fun toDafny(): String {
         return bindings.joinToString(", ") { x -> x.toDafny() }
     }

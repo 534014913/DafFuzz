@@ -1,6 +1,7 @@
 package ast
 
-sealed interface StatementNode: ASTNode {
+sealed interface StatementNode: CloneableASTNode {
+    val symbolTable: SymbolTable
 }
 
 data class BlockStatement (
