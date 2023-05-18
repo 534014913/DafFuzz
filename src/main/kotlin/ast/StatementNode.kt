@@ -1,7 +1,8 @@
 package ast
 
 sealed interface StatementNode: CloneableASTNode {
-    val symbolTable: SymbolTable
+//    val symbolTable: SymbolTable
+    override fun clone(): StatementNode
 }
 
 data class BlockStatement (
@@ -19,6 +20,10 @@ data class BlockStatement (
     fun enablePrint() {
         printIdent = true
     }
+
+    override fun clone(): BlockStatement {
+        return BlockStatement(statements.map{ it.clone()}, ident, printIdent)
+    }
 }
 
 data class DafnyStatement(
@@ -33,12 +38,16 @@ data class DafnyStatement(
         ret += nonLabelStmt.toDafny()
         return ret
     }
+
+    override fun clone(): DafnyStatement {
+        return DafnyStatement(label, nonLabelStmt.clone())
+    }
 }
 
 data class VariableDeclarationStatement(
     val hasGets: Boolean,
-    val lhs: MutableList<LocalIdentTypeOptional>,
-    val rhs: MutableList<DafnyExpression>,
+    val lhs: List<LocalIdentTypeOptional>,
+    val rhs: List<DafnyExpression>,
 ): StatementNode {
     override fun toDafny(): String {
         var ret = "var "
@@ -49,6 +58,10 @@ data class VariableDeclarationStatement(
         }
         ret += ";"
         return ret
+    }
+
+    override fun clone(): VariableDeclarationStatement {
+        return VariableDeclarationStatement(hasGets, lhs.map {it.clone()}, rhs.map{it.clone()})
     }
 }
 
@@ -66,6 +79,10 @@ data class UpdateStatement(
         ret += ";"
         return ret
     }
+
+    override fun clone(): UpdateStatement {
+        return UpdateStatement(hasGets, lhss.map{it.clone()}, rhss.map{it.clone()})
+    }
 }
 
 data class PrintStatement(
@@ -74,6 +91,10 @@ data class PrintStatement(
     override fun toDafny(): String {
         return "print ${expressions.joinToString(", ") { x -> x.toDafny() }};"
     }
+
+    override fun clone(): PrintStatement {
+        return PrintStatement(expressions.map {it.clone()})
+    }
 }
 
 data class ReturnStatement(
@@ -81,6 +102,10 @@ data class ReturnStatement(
 ): StatementNode {
     override fun toDafny(): String {
         return "return ${rhs.joinToString(", ") { x -> x.toDafny() }};"
+    }
+
+    override fun clone(): ReturnStatement {
+        return ReturnStatement(rhs.map {it.clone()})
     }
 }
 
@@ -92,6 +117,10 @@ data class IfStatement(
     override fun toDafny(): String {
         return "if (${guard.toDafny()}) \n${thenClause.toDafny()}\n" + (if (elseClause != null) " else \n${elseClause.toDafny()}\n" else "\n")
     }
+
+    override fun clone(): IfStatement {
+        return IfStatement(guard.clone(), thenClause.clone(), elseClause?.clone())
+    }
 }
 
 data class ElseSubStatement(
@@ -100,13 +129,21 @@ data class ElseSubStatement(
     override fun toDafny(): String {
         return block.toDafny()
     }
+
+    override fun clone(): ElseSubStatement {
+        return ElseSubStatement(block.clone())
+    }
 }
 
 data class AssertStatement(
-    val expression: ExpressionNode,
+    val expression: DafnyExpression,
 ): StatementNode {
     override fun toDafny(): String {
         return "assert ${expression.toDafny()};"
+    }
+
+    override fun clone(): StatementNode {
+        return AssertStatement(expression.clone())
     }
 }
 

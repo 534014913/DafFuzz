@@ -19,6 +19,10 @@ data class FunctionDeclaration(
         ret += functionBody.toDafny()
         return ret
     }
+
+    override fun clone(): FunctionDeclaration {
+        return FunctionDeclaration(isPure, name, functionSignature.clone(), functionSpecification.clone(), functionBody.clone())
+    }
 }
 
 data class FunctionSignature(
@@ -26,6 +30,10 @@ data class FunctionSignature(
 ): CloneableASTNode {
     override fun toDafny(): String {
         return text
+    }
+
+    override fun clone(): FunctionSignature {
+        return FunctionSignature(text)
     }
 }
 
@@ -35,6 +43,10 @@ data class FunctionSpecification(
     override fun toDafny(): String {
         return text
     }
+
+    override fun clone(): FunctionSpecification {
+        return FunctionSpecification(text)
+    }
 }
 
 data class FunctionBody(
@@ -42,6 +54,10 @@ data class FunctionBody(
 ): CloneableASTNode {
     override fun toDafny(): String {
         return "{ ${expr.toDafny()} }"
+    }
+
+    override fun clone(): FunctionBody {
+        return FunctionBody(expr.clone())
     }
 }
 

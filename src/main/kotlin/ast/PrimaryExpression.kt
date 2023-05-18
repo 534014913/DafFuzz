@@ -1,6 +1,7 @@
 package ast
 
 sealed interface PrimaryExpression : ExpressionNode {
+    override fun clone(): PrimaryExpression
 }
 
 data class PrimaryExpressionWithSuffix(
@@ -8,13 +9,23 @@ data class PrimaryExpressionWithSuffix(
     val suffix: List<Suffix>
 ) : ExpressionNode {
     override fun toDafny(): String {
-        return if (primary is LambdaExpression) {
-            primary.toDafny()
-        } else if (primary is EndlessExpression) {
-            primary.toDafny()
-        } else {
-            "${primary.toDafny()}${suffix.joinToString("") { x -> x.toDafny() }}"
+        return when (primary) {
+            is LambdaExpression -> {
+                primary.toDafny()
+            }
+
+            is EndlessExpression -> {
+                primary.toDafny()
+            }
+
+            else -> {
+                "${primary.toDafny()}${suffix.joinToString("") { x -> x.toDafny() }}"
+            }
         }
+    }
+
+    override fun clone(): PrimaryExpressionWithSuffix {
+        return PrimaryExpressionWithSuffix(primary.clone(), suffix.map{it.clone()})
     }
 }
 
@@ -24,6 +35,8 @@ data class NameSegment(
     override fun toDafny(): String {
         return ident
     }
+
+    override fun clone(): NameSegment = NameSegment(ident)
 }
 
 data class LambdaExpression(
@@ -39,6 +52,10 @@ data class LambdaExpression(
             "(${identType.joinToString(", ") { x -> x.toDafny() }}) => ${expression.toDafny()}"
         }
     }
+
+    override fun clone(): LambdaExpression {
+        return LambdaExpression(wildIdent, isWildIdent, identType.map{it.clone()}, expression.clone())
+    }
 }
 
 data class SeqDisplayExpression(
@@ -47,6 +64,8 @@ data class SeqDisplayExpression(
     override fun toDafny(): String {
         return "[${expressions?.toDafny() ?: ""}]"
     }
+
+    override fun clone(): SeqDisplayExpression = SeqDisplayExpression(expressions?.clone())
 }
 
 data class SetDisplayExpression(
@@ -67,6 +86,10 @@ data class SetDisplayExpression(
             "multiset (${expression!!.toDafny()})"
         }
     }
+
+    override fun clone(): SetDisplayExpression {
+        return SetDisplayExpression(isFirst, firstMulti, expressions?.clone(), expression?.clone())
+    }
 }
 
 //data class EndlessExpression(
@@ -85,6 +108,10 @@ data class LetExpression(
     override fun toDafny(): String {
         return "var ${localIdents.joinToString(", ") { x -> x.toDafny() }} := ${expressions.joinToString(", ") {x -> x.toDafny()}}; ${laterExp.toDafny()}"
     }
+
+    override fun clone(): LetExpression {
+        return LetExpression(localIdents.map { it.clone() }, expressions.map {it.clone()}, laterExp.clone())
+    }
 }
 
 data class IfExpression(
@@ -94,6 +121,10 @@ data class IfExpression(
 ): EndlessExpression {
     override fun toDafny(): String {
         return "if ${guard.toDafny()} then ${thenClause.toDafny()} else ${elseClause.toDafny()}"
+    }
+
+    override fun clone(): IfExpression {
+        return IfExpression(guard.clone(), thenClause.clone(), elseClause.clone())
     }
 }
 
@@ -107,6 +138,10 @@ data class LiteralExpression(
     override fun toDafny(): String {
         return text
     }
+
+    override fun clone(): LiteralExpression {
+        return LiteralExpression(text)
+    }
 }
 
 data class ParensExpression(
@@ -114,6 +149,10 @@ data class ParensExpression(
 ): ConstAtomExpression {
     override fun toDafny(): String {
         return "(${tuple?.toDafny() ?: ""})"
+    }
+
+    override fun clone(): ParensExpression {
+        return ParensExpression(tuple?.clone())
     }
 }
 
@@ -123,6 +162,10 @@ data class CardinalityExpression(
     override fun toDafny(): String {
         return "|${expression.toDafny()}|"
     }
+
+    override fun clone(): CardinalityExpression {
+        return CardinalityExpression(expression.clone())
+    }
 }
 
 data class TupleArgs(
@@ -130,5 +173,9 @@ data class TupleArgs(
 ): CloneableASTNode {
     override fun toDafny(): String {
         return bindings.joinToString(", ") { x -> x.toDafny() }
+    }
+
+    override fun clone(): TupleArgs {
+        return TupleArgs(bindings.map { it.clone() })
     }
 }

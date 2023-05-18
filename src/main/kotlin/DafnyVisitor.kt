@@ -83,7 +83,21 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitMethodSignature(ctx: DafnyParser.MethodSignatureContext?): MethodSignature {
         if (ctx == null) throw Exception()
-        return MethodSignature(null, null, ctx.text)
+        val formals = visitFormals(ctx.formals(0))
+        var retFormals: Formals? = null
+        if (ctx.RETURNS() != null) {
+            retFormals = visitFormals(ctx.formals(1))
+        }
+        return MethodSignature(formals, retFormals)
+    }
+
+    override fun visitFormals(ctx: DafnyParser.FormalsContext?): Formals {
+        if (ctx == null) throw Exception()
+        val identTypes = mutableListOf<IdentType>()
+        for (identTs in ctx.identType()) {
+            identTypes.add(visitIdentType(identTs))
+        }
+        return Formals(identTypes)
     }
 
     override fun visitMethodSpec(ctx: DafnyParser.MethodSpecContext?): MethodSpecification {

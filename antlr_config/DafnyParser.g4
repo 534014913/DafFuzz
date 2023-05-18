@@ -31,11 +31,13 @@ methodKeyWord: (METHOD | LEMMA);
 
 methodSignature: formals (RETURNS formals)?;
 
-formals: OPENPAREN (gIdentType (COMMA gIdentType)*)? CLOSEPAREN;
+//formals: OPENPAREN (gIdentType (COMMA gIdentType)*)? CLOSEPAREN;
+formals: OPENPAREN (identType (COMMA identType)*)? CLOSEPAREN;
 
 functionDeclaration: FUNCTION (METHOD)? methodFunctionName functionSignature functionSpec (functionBody)?;
 
-functionSignature: (genericParameters)?formals COLON (type | OPENPAREN gIdentType CLOSEPAREN);
+//functionSignature: (genericParameters)?formals COLON (type | OPENPAREN gIdentType CLOSEPAREN);
+functionSignature: (genericParameters)?formals COLON (type | OPENPAREN identType CLOSEPAREN);
 
 genericParameters: LESS T GREATER;
 
@@ -227,7 +229,7 @@ nat: DIGITS;
 
 
 // IDENTS
-gIdentType: identType (GETS expression)?;
+//gIdentType: identType (GETS expression)?;
 
 identType: wildIdent COLON type;
 

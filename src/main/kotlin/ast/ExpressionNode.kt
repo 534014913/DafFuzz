@@ -11,7 +11,7 @@ data class DafnyExpression(
     }
 
     override fun clone(): DafnyExpression {
-        return DafnyExpression(impliesExplies.map { it.clone() as ImpliesExpliesExpression })
+        return DafnyExpression(impliesExplies.map { it.clone() })
     }
 }
 
@@ -28,7 +28,7 @@ data class ImpliesExpliesExpression(
     val isSimplest: Boolean,
     val isImplies: Boolean,
     val implies: ImpliesExpression?,
-    val explies: List<LogicalExpression>?
+    val explies: List<LogicalExpression>
 ) : ExpressionNode {
     override fun toDafny(): String {
         return if (isSimplest) {
@@ -36,8 +36,12 @@ data class ImpliesExpliesExpression(
         } else if (isImplies) {
             "${logical.toDafny()} ==> ${implies?.toDafny() ?: ""}"
         } else {
-            "${logical.toDafny()} <== ${explies!!.joinToString(" <== ") { x -> x.toDafny() }}"
+            "${logical.toDafny()} <== ${explies.joinToString(" <== ") { x -> x.toDafny() }}"
         }
+    }
+
+    override fun clone(): ImpliesExpliesExpression {
+        return ImpliesExpliesExpression(logical.clone(), isSimplest, isImplies, implies?.clone(), explies.map {it.clone()})
     }
 }
 
@@ -54,6 +58,9 @@ data class ImpliesExpression(
         }
     }
 
+    override fun clone(): ImpliesExpression {
+        return ImpliesExpression(logical.clone(), hasImplies, implies?.clone())
+    }
 }
 
 data class LogicalExpression(
@@ -77,7 +84,7 @@ data class LogicalExpression(
     }
 
     override fun clone(): LogicalExpression {
-
+        return LogicalExpression(firstLogical, primaryRelational.clone(), subLogicalOperators.toList(), subRelational.map { it.clone() }, hasMoreRelational)
     }
 }
 
@@ -103,6 +110,10 @@ data class RelationalExpression(
             }
         }
         return ret
+    }
+
+    override fun clone(): RelationalExpression {
+        return RelationalExpression(term.clone(), hasSubTerms, relOp.toList(), restTerms.map {it.clone()})
     }
 }
 
@@ -191,6 +202,10 @@ data class Term(
         }
         return ret
     }
+
+    override fun clone(): Term {
+        return Term(asExp.clone(), hasSub, biOp.toList(), restAsExps.map {it.clone()})
+    }
 }
 
 data class AsExpression(
@@ -213,6 +228,10 @@ data class AsExpression(
             }
         }
         return ret
+    }
+
+    override fun clone(): AsExpression {
+       return AsExpression(unary.clone(), asOps.toList(), types.map {it.clone()})
     }
 }
 
@@ -275,6 +294,10 @@ data class UnaryExpression(
             assert(unaryOp != null)
             "${unaryOp!!.toDafny()} ${unary!!.toDafny()}"
         }
+    }
+
+    override fun clone(): UnaryExpression {
+        return UnaryExpression(unaryOp, unary?.clone(), isPrimary, primary?.clone())
     }
 }
 

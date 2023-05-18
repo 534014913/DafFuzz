@@ -6,7 +6,7 @@ sealed interface TypeNode : CloneableASTNode {
         return baseString
     }
 
-    fun clone(): TypeNode
+    override fun clone(): TypeNode
 }
 
 data class BoolNode(
@@ -46,7 +46,7 @@ data class GenericInstantiation(
         return "<${types.joinToString(", ") { x -> x.toDafny() }}>"
     }
 
-    fun clone(): GenericInstantiation = GenericInstantiation(types = types.map { it.clone() })
+    override fun clone(): GenericInstantiation = GenericInstantiation(types = types.map { it.clone() })
 }
 
 data class SequenceNode(
