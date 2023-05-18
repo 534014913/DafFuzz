@@ -22,10 +22,6 @@ class DafnyRunner(private val dafnyPath: String) {
         }
     }
 
-    fun String.rumCommand() {
-
-    }
-
 }
 
 //fun main(args: Array<String>) {

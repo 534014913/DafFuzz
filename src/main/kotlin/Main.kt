@@ -5,12 +5,15 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import java.io.File
 import java.io.FileInputStream
+import kotlin.random.Random
 import kotlin.system.exitProcess
 
 const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
 const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
 //const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
 const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
+
+lateinit var SeedRandom: Random
 
 fun main(args: Array<String>) {
     if (args[0] == "directory") {

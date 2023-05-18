@@ -1,82 +1,105 @@
 package ast
 
-sealed interface TypeNode: ASTNode {
+sealed interface TypeNode : ASTNode {
     val baseString: String
     override fun toDafny(): String {
         return baseString
     }
+
+    fun clone(): TypeNode
 }
 
 data class BoolNode(
     override val baseString: String = "bool"
-): TypeNode {}
+) : TypeNode {
+    override fun clone(): BoolNode = BoolNode()
+}
 
 data class CharNode(
     override val baseString: String = "char"
-): TypeNode {}
+) : TypeNode {
+    override fun clone(): CharNode = CharNode()
+}
 
 data class IntNode(
     override val baseString: String = "int"
-): TypeNode {}
+) : TypeNode {
+    override fun clone(): IntNode = IntNode()
+}
 
 data class StringNode(
     override val baseString: String = "string"
-): TypeNode {}
+) : TypeNode {
+    override fun clone(): StringNode = StringNode()
+}
 
 data class NatNode(
     override val baseString: String = "nat"
-): TypeNode {}
+) : TypeNode {
+    override fun clone(): NatNode = NatNode()
+}
 
 data class GenericInstantiation(
     val types: List<TypeNode>
-): ASTNode {
+) : ASTNode {
     override fun toDafny(): String {
-        return "<${types.joinToString(", ") { x -> x.toDafny()}}>"
+        return "<${types.joinToString(", ") { x -> x.toDafny() }}>"
     }
+
+    fun clone(): GenericInstantiation = GenericInstantiation(types = types.map { it.clone() })
 }
 
 data class SequenceNode(
     val genericInstantiation: GenericInstantiation?,
     override val baseString: String = "seq"
-): TypeNode {
+) : TypeNode {
     override fun toDafny(): String {
         val generic = genericInstantiation?.toDafny() ?: ""
         return "$baseString$generic"
     }
+
+    override fun clone(): SequenceNode = SequenceNode(genericInstantiation?.clone())
 }
 
 data class SetNode(
     val genericInstantiation: GenericInstantiation?,
     override val baseString: String = "set"
-): TypeNode {
+) : TypeNode {
     override fun toDafny(): String {
         val generic = genericInstantiation?.toDafny() ?: ""
         return "$baseString$generic"
     }
+
+    override fun clone(): SetNode = SetNode(genericInstantiation?.clone())
 }
 
 data class MultiSetNode(
     val genericInstantiation: GenericInstantiation?,
     override val baseString: String = "multiset"
-): TypeNode {
+) : TypeNode {
     override fun toDafny(): String {
         val generic = genericInstantiation?.toDafny() ?: ""
         return "$baseString$generic"
     }
+
+    override fun clone(): MultiSetNode = MultiSetNode(genericInstantiation?.clone())
 }
 
 data class TupleNode(
     val types: List<TypeNode>,
     override val baseString: String = "tuple"
-): TypeNode {
+) : TypeNode {
     override fun toDafny(): String {
-        return "(${types.joinToString(", ") { x -> x.toDafny()}})"
+        return "(${types.joinToString(", ") { x -> x.toDafny() }})"
     }
+
+    override fun clone(): TupleNode = TupleNode(types.map { it.clone() })
 }
 
 data class TNode(
     override val baseString: String = "T"
 ) : TypeNode {
+    override fun clone(): TNode = TNode()
 }
 
 data class ArrowType(
@@ -87,5 +110,6 @@ data class ArrowType(
     override fun toDafny(): String {
         return "${type.toDafny()} -> ${afterArrow.toDafny()}"
     }
+    override fun clone(): ArrowType = ArrowType(type.clone(), afterArrow.clone())
 }
 
