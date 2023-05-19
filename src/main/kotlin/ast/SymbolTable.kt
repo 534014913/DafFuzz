@@ -3,10 +3,13 @@ package ast
 
 data class SymbolTable(
     val parent: SymbolTable?,
-    val methodSymbolTable: MethodSymbolTable,
-    val globalSymbolTable: GlobalSymbolTable,
+//    val methodSymbolTable: MethodSymbolTable,
+//    val globalSymbolTable: GlobalSymbolTable,
     val symbolMap: MutableMap<String, IdentifierData> = mutableMapOf()
 ) : Iterable<SymbolTable> {
+    companion object {
+        lateinit var topLevelST: SymbolTable
+    }
     override fun iterator() = SymbolTableIterator(this)
 
     operator fun get(key: String): IdentifierData? {
@@ -33,9 +36,9 @@ data class SymbolTable(
 
 data class IdentifierData(
     val type: TypeNode,
-    val depth: Int,
+//    val depth: Int,
     val textRepresentation: String,
-    val constant: Boolean = false
+//    val constant: Boolean = false
 ) {
     fun clone(): IdentifierData {
         return this.copy(type = type.clone())
