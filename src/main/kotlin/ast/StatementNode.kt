@@ -6,7 +6,7 @@ sealed interface StatementNode: CloneableASTNode {
 }
 
 data class BlockStatement (
-    val statements: List<DafnyStatement>,
+    var statements: MutableList<DafnyStatement>,
     val ident: Int,
     var printIdent: Boolean = false,
 ): StatementNode {
@@ -22,7 +22,7 @@ data class BlockStatement (
     }
 
     override fun clone(): BlockStatement {
-        return BlockStatement(statements.map{ it.clone()}, ident, printIdent)
+        return BlockStatement(statements.map{ it.clone()}.toMutableList(), ident, printIdent)
     }
 }
 

@@ -3,11 +3,15 @@ package ast
 sealed interface ASTNode {
     fun toDafny(): String
 
+//    fun accept(visitor: DafnyVisitor)
+
 //    fun walk(symbolTable: SymbolTable, dafnyWalker: DafnyWalker)
 }
 
 sealed interface CloneableASTNode : ASTNode {
     fun clone(): CloneableASTNode
+
+//    fun walk(st: SymbolTable, walker: DafnyWalker)
 }
 
 sealed interface NonCloneableASTNode : ASTNode {
@@ -101,7 +105,7 @@ data class MethodDeclaration(
     val blockStatement: BlockStatement
 ) : CloneableASTNode, DafnyDeclaration {
     override fun toDafny(): String {
-        return "method $methodName${methodSignature.toDafny()}\n${methodSpec.toDafny()}{\n${blockStatement.toDafny()}\n}"
+        return "method $methodName${methodSignature.toDafny()}\n${methodSpec.toDafny()}\n${blockStatement.toDafny()}\n"
     }
 
     override fun clone(): MethodDeclaration {
@@ -119,7 +123,7 @@ data class MethodSignature(
     val returnFormals: Formals?,
 ) : CloneableASTNode {
     override fun toDafny(): String {
-        return formals.toDafny() + " returns ${returnFormals?.toDafny() ?: ""}"
+        return formals.toDafny() + (if (returnFormals != null) " returns " else "") + (returnFormals?.toDafny() ?: "")
     }
 
     override fun clone(): MethodSignature {

@@ -10,8 +10,8 @@ import kotlin.system.exitProcess
 
 const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
 const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
-//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
-const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
+const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
+//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
 
 lateinit var SeedRandom: Random
 
