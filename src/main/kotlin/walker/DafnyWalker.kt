@@ -1,17 +1,15 @@
 package walker
 
-import ast.BlockStatement
 import ast.Dafny
 import ast.SymbolTable
 
 class DafnyWalker(
-    topLevelSymbolTable: SymbolTable
-
 ) {
-    fun walkDafny(dafny: Dafny): Map<BlockStatement, Boolean> {
+    lateinit var topST: SymbolTable
+    fun walkDafny(dafny: Dafny) {
         val st = SymbolTable(null)
+        topST = st
         SymbolTable.topLevelST = st
-//        dafny.walk(st, this)
-        TODO("DafnyWalker not implemented")
+        dafny.walk(st, this)
     }
 }

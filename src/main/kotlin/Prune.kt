@@ -1,7 +1,7 @@
 import ast.*
 
 fun addInstrumentation(dafny: Dafny) {
-    for (topl in dafny.toplevel) {
+    for (topl in dafny.toplevels) {
         if (!topl.classMember.isMethod) {
             continue
         }
@@ -27,7 +27,7 @@ fun addPrint(blockStatement: BlockStatement) {
 
 fun prune(dafny: Dafny, upBlocks: Set<Int>): Dafny {
     val newToplevelDecl = mutableListOf<TopDeclaration>()
-    for (topl in dafny.toplevel) {
+    for (topl in dafny.toplevels) {
         if (!topl.classMember.isMethod) {
             newToplevelDecl.add(topl.copy())
         } else {
@@ -41,7 +41,7 @@ fun prune(dafny: Dafny, upBlocks: Set<Int>): Dafny {
         }
     }
     val newDafny = dafny.copy()
-    newDafny.toplevel = newToplevelDecl
+    newDafny.toplevels = newToplevelDecl
     return newDafny
 }
 
@@ -78,6 +78,7 @@ fun pruneHelper(stmt: StatementNode, upBlocks: Set<Int>): StatementNode {
         is UpdateStatement -> stmt.copy()
         is VariableDeclarationStatement -> stmt.copy()
         is DafnyStatement -> throw Exception("shouled now visit DafnyStatement")
+        else -> throw RuntimeException("${stmt::class} kind should now appear in xdSmith")
     }
 }
 
