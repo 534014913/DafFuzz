@@ -152,3 +152,11 @@ data class TupleType(
         return TupleType(types.map { it.clone() })
     }
 }
+
+data class UndecidedType(
+    override val baseString: String = "Undecided"
+): TypeNode {
+    override fun clone(): TypeNode {
+        return UndecidedType()
+    }
+}
