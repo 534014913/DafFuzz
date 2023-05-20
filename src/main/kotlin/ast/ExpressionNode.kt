@@ -13,6 +13,14 @@ data class DafnyExpression(
     override fun clone(): DafnyExpression {
         return DafnyExpression(impliesExplies.map { it.clone() })
     }
+
+    fun getTextRepresentationOrNull(): String? {
+        return if (impliesExplies.size > 1) {
+            null
+        } else {
+            impliesExplies[0].getTextRepresentation()
+        }
+    }
 }
 
 //data class EquivExpression(
@@ -41,7 +49,20 @@ data class ImpliesExpliesExpression(
     }
 
     override fun clone(): ImpliesExpliesExpression {
-        return ImpliesExpliesExpression(logical.clone(), isSimplest, isImplies, implies?.clone(), explies.map {it.clone()})
+        return ImpliesExpliesExpression(
+            logical.clone(),
+            isSimplest,
+            isImplies,
+            implies?.clone(),
+            explies.map { it.clone() })
+    }
+
+    fun getTextRepresentation(): String? {
+        return if (isSimplest) {
+            logical.getTextRepresentation()
+        } else {
+            null
+        }
     }
 }
 
@@ -84,7 +105,21 @@ data class LogicalExpression(
     }
 
     override fun clone(): LogicalExpression {
-        return LogicalExpression(firstLogical, primaryRelational.clone(), subLogicalOperators.toList(), subRelational.map { it.clone() }, hasMoreRelational)
+        return LogicalExpression(
+            firstLogical,
+            primaryRelational.clone(),
+            subLogicalOperators.toList(),
+            subRelational.map { it.clone() },
+            hasMoreRelational
+        )
+    }
+
+    fun getTextRepresentation(): String? {
+        return if (subLogicalOperators.isNotEmpty()) {
+            null
+        } else {
+            primaryRelational.getTextRepresentation()
+        }
     }
 }
 
@@ -113,7 +148,19 @@ data class RelationalExpression(
     }
 
     override fun clone(): RelationalExpression {
-        return RelationalExpression(term.clone(), hasSubTerms, relOp.toList(), restTerms.map {it.clone()})
+        return RelationalExpression(
+            term.clone(),
+            hasSubTerms,
+            relOp.toList(),
+            restTerms.map { it.clone() })
+    }
+
+    fun getTextRepresentation(): String? {
+        return if (relOp.isNotEmpty()) {
+            null
+        } else {
+            term.getTextRepresentation()
+        }
     }
 }
 
@@ -204,7 +251,15 @@ data class Term(
     }
 
     override fun clone(): Term {
-        return Term(asExp.clone(), hasSub, biOp.toList(), restAsExps.map {it.clone()})
+        return Term(asExp.clone(), hasSub, biOp.toList(), restAsExps.map { it.clone() })
+    }
+
+    fun getTextRepresentation(): String? {
+        return if (biOp.isNotEmpty()) {
+            null
+        } else {
+            asExp.getTextRepresentation()
+        }
     }
 }
 
@@ -231,7 +286,15 @@ data class AsExpression(
     }
 
     override fun clone(): AsExpression {
-       return AsExpression(unary.clone(), asOps.toList(), types.map {it.clone()})
+        return AsExpression(unary.clone(), asOps.toList(), types.map { it.clone() })
+    }
+
+    fun getTextRepresentation(): String? {
+        return if (asOps.isNotEmpty()) {
+            null
+        } else {
+            unary.getTextRepresentation()
+        }
     }
 }
 
@@ -299,9 +362,18 @@ data class UnaryExpression(
     override fun clone(): UnaryExpression {
         return UnaryExpression(unaryOp, unary?.clone(), isPrimary, primary?.clone())
     }
+
+    fun getTextRepresentation(): String? {
+        return if (isPrimary) {
+            primary!!.getTextRepresentation()
+        } else {
+            val u = unary!!.getTextRepresentation()
+            if (u == null) null else unaryOp!!.toDafny() + u
+        }
+    }
 }
 
-enum class UnaryOperator: NonCloneableASTNode {
+enum class UnaryOperator : NonCloneableASTNode {
     SUB {
         override fun toDafny(): String {
             return "-"

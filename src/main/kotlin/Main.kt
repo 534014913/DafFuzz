@@ -1,10 +1,13 @@
+
 import antlr.DafnyLexer
 import antlr.DafnyParser
+import ast.SymbolTable
 import mutator.PruneMutator
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import utils.IRandom
 import utils.RandomWrapper
+import walker.DafnyWalker
 import java.io.File
 import java.io.FileInputStream
 import kotlin.system.exitProcess
@@ -90,6 +93,19 @@ fun processDafny(file: File, runner: DafnyRunner) {
     }
 
     val dafnyAst = DafnyVisitor.makeAST(parserTree)
+
+    val st = SymbolTable(null,)
+    val walker = DafnyWalker()
+    walker.walkDafny(dafnyAst)
+    val method = dafnyAst.toplevels[0].classMember.method!!
+    for (stmt in method.blockStatement.statements) {
+        println(stmt.stmtSymbolTable)
+//        println(stmt.nonLabelStmt.stmtSymbolTable)
+        assert(stmt.stmtSymbolTable.toString() == stmt.nonLabelStmt.stmtSymbolTable.toString())
+        println(stmt.toDafny())
+    }
+    println(method.blockStatement.stmtSymbolTable)
+    return
 
     addInstrumentation(dafnyAst)
 

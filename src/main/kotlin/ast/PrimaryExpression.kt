@@ -2,7 +2,14 @@ package ast
 
 sealed interface PrimaryExpression : ExpressionNode {
     override fun clone(): PrimaryExpression
+
+    fun getTextRepresentation(): String?
 }
+
+sealed interface LhsExpression: PrimaryExpression {
+
+}
+
 
 data class PrimaryExpressionWithSuffix(
     val primary: PrimaryExpression,
@@ -27,16 +34,27 @@ data class PrimaryExpressionWithSuffix(
     override fun clone(): PrimaryExpressionWithSuffix {
         return PrimaryExpressionWithSuffix(primary.clone(), suffix.map{it.clone()})
     }
+    fun getTextRepresentation(): String? {
+        return if (suffix.isNotEmpty()) {
+            null
+        } else {
+            primary.getTextRepresentation()
+        }
+    }
 }
 
 data class NameSegment(
     val ident: String
-) : PrimaryExpression {
+) : PrimaryExpression, LhsExpression {
     override fun toDafny(): String {
         return ident
     }
 
     override fun clone(): NameSegment = NameSegment(ident)
+
+    override fun getTextRepresentation(): String? {
+        return ident
+    }
 }
 
 data class LambdaExpression(
@@ -56,6 +74,10 @@ data class LambdaExpression(
     override fun clone(): LambdaExpression {
         return LambdaExpression(wildIdent, isWildIdent, identType.map{it.clone()}, expression.clone())
     }
+
+    override fun getTextRepresentation(): String? {
+        return null
+    }
 }
 
 data class SeqDisplayExpression(
@@ -66,6 +88,10 @@ data class SeqDisplayExpression(
     }
 
     override fun clone(): SeqDisplayExpression = SeqDisplayExpression(expressions?.clone())
+
+    override fun getTextRepresentation(): String? {
+        return null
+    }
 }
 
 data class SetDisplayExpression(
@@ -90,6 +116,10 @@ data class SetDisplayExpression(
     override fun clone(): SetDisplayExpression {
         return SetDisplayExpression(isFirst, firstMulti, expressions?.clone(), expression?.clone())
     }
+
+    override fun getTextRepresentation(): String? {
+        return null
+    }
 }
 
 //data class EndlessExpression(
@@ -112,6 +142,10 @@ data class LetExpression(
     override fun clone(): LetExpression {
         return LetExpression(localIdents.map { it.clone() }, expressions.map {it.clone()}, laterExp.clone())
     }
+
+    override fun getTextRepresentation(): String? {
+        return null
+    }
 }
 
 data class IfExpression(
@@ -126,9 +160,13 @@ data class IfExpression(
     override fun clone(): IfExpression {
         return IfExpression(guard.clone(), thenClause.clone(), elseClause.clone())
     }
+
+    override fun getTextRepresentation(): String? {
+        return null
+    }
 }
 
-sealed interface ConstAtomExpression : PrimaryExpression {
+sealed interface ConstAtomExpression : PrimaryExpression, LhsExpression {
 
 }
 
@@ -142,6 +180,10 @@ data class LiteralExpression(
     override fun clone(): LiteralExpression {
         return LiteralExpression(text)
     }
+
+    override fun getTextRepresentation(): String? {
+        return text
+    }
 }
 
 data class ParensExpression(
@@ -154,6 +196,10 @@ data class ParensExpression(
     override fun clone(): ParensExpression {
         return ParensExpression(tuple?.clone())
     }
+
+    override fun getTextRepresentation(): String? {
+        return null
+    }
 }
 
 data class CardinalityExpression(
@@ -165,6 +211,10 @@ data class CardinalityExpression(
 
     override fun clone(): CardinalityExpression {
         return CardinalityExpression(expression.clone())
+    }
+
+    override fun getTextRepresentation(): String? {
+        return null
     }
 }
 
