@@ -143,3 +143,12 @@ data class LambdaType(
         return LambdaType(args.map { it.clone() }, retType.clone())
     }
 }
+
+data class TupleType(
+    val types: List<TypeNode>,
+    override val baseString: String = "tupleType"
+) : TypeNode {
+    override fun clone(): TypeNode {
+        return TupleType(types.map { it.clone() })
+    }
+}
