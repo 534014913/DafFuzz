@@ -5,7 +5,11 @@ data class SymbolTable(
     val parent: SymbolTable?,
 //    val methodSymbolTable: MethodSymbolTable,
 //    val globalSymbolTable: GlobalSymbolTable,
-    val symbolMap: MutableMap<String, IdentifierData> = mutableMapOf()
+    val symbolMap: MutableMap<String, IdentifierData> = mutableMapOf(),
+    // var x := yi + yo
+    // then dependentLhss[yi] = [x], dependentLhss[yo] = [x]
+    // TODO: Self-dependency?
+    val dependentLhss: MutableMap<String, MutableSet<String>> = mutableMapOf()
 ) : Iterable<SymbolTable> {
     companion object {
         lateinit var topLevelST: SymbolTable
