@@ -1,5 +1,6 @@
 package ast
 
+//TODO: override equals()
 sealed interface TypeNode : CloneableASTNode {
     val baseString: String
     override fun toDafny(): String {
@@ -46,7 +47,8 @@ data class GenericInstantiation(
         return "<${types.joinToString(", ") { x -> x.toDafny() }}>"
     }
 
-    override fun clone(): GenericInstantiation = GenericInstantiation(types = types.map { it.clone() })
+    override fun clone(): GenericInstantiation =
+        GenericInstantiation(types = types.map { it.clone() })
 }
 
 data class SequenceNode(
@@ -110,6 +112,34 @@ data class ArrowType(
     override fun toDafny(): String {
         return "${type.toDafny()} -> ${afterArrow.toDafny()}"
     }
+
     override fun clone(): ArrowType = ArrowType(type.clone(), afterArrow.clone())
 }
 
+data class MethodType(
+    val args: List<TypeNode>,
+    val retType: List<TypeNode>,
+    override val baseString: String = "ERROR"
+) : TypeNode {
+    override fun toDafny(): String {
+        return "methodType"
+    }
+
+    override fun clone(): TypeNode {
+        return MethodType(args.map { it.clone() }, retType.map { it.clone() })
+    }
+}
+
+data class LambdaType(
+    val args: List<TypeNode>,
+    val retType: TypeNode,
+    override val baseString: String = "ERROR"
+) : TypeNode {
+    override fun toDafny(): String {
+        throw RuntimeException("Should not be invoked")
+    }
+
+    override fun clone(): TypeNode {
+        return LambdaType(args.map { it.clone() }, retType.clone())
+    }
+}

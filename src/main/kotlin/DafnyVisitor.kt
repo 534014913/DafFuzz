@@ -180,7 +180,7 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitLhs(ctx: DafnyParser.LhsContext?): Lhs {
         if (ctx == null) throw Exception()
-        val primary: PrimaryExpression = if (ctx.nameSegment() != null) {
+        val primary: LhsExpression = if (ctx.nameSegment() != null) {
            visitNameSegment(ctx.nameSegment())
         } else {
             assert(ctx.constAtomExpression() != null)

@@ -24,6 +24,10 @@ data class SymbolTable(
         symbolMap[key] = value
     }
 
+    fun getType(key: String): TypeNode? {
+        return symbolMap[key]?.type
+    }
+
     fun getLocalVariables(): Set<String> {
         return symbolMap.keys
     }
@@ -36,16 +40,42 @@ data class SymbolTable(
         return currentVariables
     }
 
+    fun clone(): SymbolTable {
+        return SymbolTable(
+            parent,
+            symbolMap.mapValues { it.value.clone().copy(type = it.value.type.clone()) }.toMutableMap(),
+            dependentLhss.mapValues { it.value.toMutableSet() }.toMutableMap()
+        )
+    }
+
+    fun spawn(): SymbolTable {
+        return SymbolTable(
+            this,
+            symbolMap.mapValues { it.value.clone().copy(type = it.value.type.clone()) }.toMutableMap(),
+            dependentLhss.mapValues { it.value.toMutableSet() }.toMutableMap()
+        )
+    }
+
+    override fun toString(): String {
+        return symbolMap.toString()
+    }
+
 }
 
 data class IdentifierData(
     val type: TypeNode,
 //    val depth: Int,
-    val textRepresentation: String,
+    // if rhs is ident then the textRep is the name of the ident,
+    // if rhs is literal, then the textRep is the literal
+    val textRepresentation: String?,
 //    val constant: Boolean = false
 ) {
     fun clone(): IdentifierData {
         return this.copy(type = type.clone())
+    }
+
+    override fun toString(): String {
+        return "idData(${type.toDafny()}, $textRepresentation}"
     }
 }
 

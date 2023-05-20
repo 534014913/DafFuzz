@@ -25,10 +25,11 @@ class PruneMutator(
     }
 
     private fun findDeadBlocks(dafny: Dafny): List<BlockStatement> {
-        val methods = dafny.toplevel
+        val methods = dafny.toplevels
         val deadBlocks = mutableListOf<BlockStatement>()
         for (method in methods) {
             val member = method.classMember
+            //TODO: function not considered at the moment
             if (member.isMethod) {
                 addDeadBlocks(member.method!!.blockStatement, deadBlocks)
             }
