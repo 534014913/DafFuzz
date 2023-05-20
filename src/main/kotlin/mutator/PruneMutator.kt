@@ -19,9 +19,9 @@ class PruneMutator(
         val dafnyClone = dafny.clone()
         val deadBlocks = findDeadBlocks(dafnyClone)
         for (db in deadBlocks) {
-            pruneStatement(db)
+            pruneStatement(db, dafnyClone)
         }
-        return dafny.clone()
+        return dafnyClone
     }
 
     private fun findDeadBlocks(dafny: Dafny): List<BlockStatement> {
@@ -46,21 +46,21 @@ class PruneMutator(
     }
 
     private fun addDeadBlocksDS(dStatement: DafnyStatement, deadBlocks: MutableList<BlockStatement>) {
-        val stmt = dStatement.nonLabelStmt
-        when (stmt) {
+        when (val stmt = dStatement.nonLabelStmt) {
             is BlockStatement -> addDeadBlocks(stmt, deadBlocks)
             else -> return
         }
     }
 
-    private fun pruneStatement(block: BlockStatement) {
+    private fun pruneStatement(block: BlockStatement, dafnyClone: Dafny) {
         val canPrune = min(rand.nextInt(pruneNumber), (block.statements.size * PRUNE_STATEMENT_RATIO).toInt())
         if (shuffle) {
             block.statements.shuffle()
         }
         repeat(canPrune) {
-            val s = block.statements.removeAt(rand.nextInt(block.statements.size))
-            println(s.toDafny())
+            val id = rand.nextInt(block.statements.size)
+            val s = block.statements.removeAt(id)
+            dafnyClone.addPruned(s)
         }
     }
 }

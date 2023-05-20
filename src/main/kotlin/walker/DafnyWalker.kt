@@ -1,4 +1,8 @@
-package ast
+package walker
+
+import ast.BlockStatement
+import ast.Dafny
+import ast.SymbolTable
 
 class DafnyWalker(
     topLevelSymbolTable: SymbolTable
