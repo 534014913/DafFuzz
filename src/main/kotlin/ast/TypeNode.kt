@@ -17,7 +17,7 @@ data class BoolNode(
     override fun clone(): BoolNode = BoolNode(i)
 
     override fun toDafny(): String {
-        return "Bool $i"
+        return "bool"
     }
 }
 
@@ -61,6 +61,9 @@ data class SequenceNode(
     override val baseString: String = "seq"
 ) : TypeNode {
     override fun toDafny(): String {
+        if (genericInstantiation != null) {
+            assert(genericInstantiation.types.size == 1)
+        }
         val generic = genericInstantiation?.toDafny() ?: ""
         return "$baseString$generic"
     }
@@ -156,13 +159,30 @@ data class TupleType(
     override fun clone(): TypeNode {
         return TupleType(types.map { it.clone() })
     }
+
+    override fun toDafny(): String {
+        return "(${types.joinToString(", ") { it.toDafny() }})"
+    }
 }
+
 
 data class UndecidedType(
     override val baseString: String = "Undecided"
 ): TypeNode {
     override fun clone(): TypeNode {
         return UndecidedType()
+    }
+
+    override fun toDafny(): String {
+        return "Undecided($baseString)"
+    }
+}
+
+data class EmptyType(
+    override val baseString: String = "()"
+): TypeNode {
+    override fun clone(): TypeNode {
+        return EmptyType()
     }
 
 }

@@ -75,7 +75,7 @@ data class IdentifierData(
     }
 
     override fun toString(): String {
-        return "idData(${type.toDafny()}, $textRepresentation}"
+        return "idData(${type.toDafny()}, $textRepresentation)"
     }
 }
 

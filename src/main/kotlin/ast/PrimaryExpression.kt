@@ -8,7 +8,7 @@ sealed interface PrimaryExpression : ExpressionNode {
     fun inferType(st: SymbolTable): TypeNode
 }
 
-sealed interface LhsExpression: PrimaryExpression {
+sealed interface LhsExpression : PrimaryExpression {
 
 }
 
@@ -34,8 +34,9 @@ data class PrimaryExpressionWithSuffix(
     }
 
     override fun clone(): PrimaryExpressionWithSuffix {
-        return PrimaryExpressionWithSuffix(primary.clone(), suffix.map{it.clone()})
+        return PrimaryExpressionWithSuffix(primary.clone(), suffix.map { it.clone() })
     }
+
     fun getTextRepresentation(): String? {
         return if (suffix.isNotEmpty()) {
             null
@@ -62,7 +63,7 @@ data class NameSegment(
 
     override fun clone(): NameSegment = NameSegment(ident)
 
-    override fun getTextRepresentation(): String? {
+    override fun getTextRepresentation(): String {
         return ident
     }
 
@@ -86,7 +87,12 @@ data class LambdaExpression(
     }
 
     override fun clone(): LambdaExpression {
-        return LambdaExpression(wildIdent, isWildIdent, identType.map{it.clone()}, expression.clone())
+        return LambdaExpression(
+            wildIdent,
+            isWildIdent,
+            identType.map { it.clone() },
+            expression.clone()
+        )
     }
 
     override fun getTextRepresentation(): String? {
@@ -112,7 +118,14 @@ data class SeqDisplayExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        TODO("Not yet implemented")
+        if (expressions == null) {
+            return UndecidedType("SeqDisp cant decide")
+        }
+        val t = expressions.extractSingleType(st)
+        if (t !is UndecidedType) {
+            return SequenceNode(GenericInstantiation(listOf(t)))
+        }
+        return UndecidedType("SeqDisp cant decide")
     }
 }
 
@@ -126,7 +139,7 @@ data class SetDisplayExpression(
         return if (isFirst) {
             var ret = if (firstMulti) "multiset " else ""
             ret += "{"
-            ret += expressions?.toDafny() ?:""
+            ret += expressions?.toDafny() ?: ""
             ret += "}"
             ret
         } else {
@@ -144,7 +157,19 @@ data class SetDisplayExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        return UndecidedType("SetDisplay infer")
+        return if (isFirst) {
+            val type = expressions!!.extractSingleType(st)
+            val gI = GenericInstantiation(listOf(type))
+            if (firstMulti) {
+                MultiSetNode(gI)
+            } else {
+                SetNode(gI)
+            }
+        } else {
+            val type = expression!!.inferType(st)
+            val gI = GenericInstantiation(listOf(type))
+            MultiSetNode(gI)
+        }
     }
 }
 
@@ -162,11 +187,19 @@ data class LetExpression(
     val laterExp: DafnyExpression
 ) : EndlessExpression {
     override fun toDafny(): String {
-        return "var ${localIdents.joinToString(", ") { x -> x.toDafny() }} := ${expressions.joinToString(", ") {x -> x.toDafny()}}; ${laterExp.toDafny()}"
+        return "var ${localIdents.joinToString(", ") { x -> x.toDafny() }} := ${
+            expressions.joinToString(
+                ", "
+            ) { x -> x.toDafny() }
+        }; ${laterExp.toDafny()}"
     }
 
     override fun clone(): LetExpression {
-        return LetExpression(localIdents.map { it.clone() }, expressions.map {it.clone()}, laterExp.clone())
+        return LetExpression(
+            localIdents.map { it.clone() },
+            expressions.map { it.clone() },
+            laterExp.clone()
+        )
     }
 
     override fun getTextRepresentation(): String? {
@@ -174,7 +207,7 @@ data class LetExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        TODO("Not yet implemented")
+        return UndecidedType("LetEpxr not supported")
     }
 }
 
@@ -182,7 +215,7 @@ data class IfExpression(
     val guard: DafnyExpression,
     val thenClause: DafnyExpression,
     val elseClause: DafnyExpression
-): EndlessExpression {
+) : EndlessExpression {
     override fun toDafny(): String {
         return "if ${guard.toDafny()} then ${thenClause.toDafny()} else ${elseClause.toDafny()}"
     }
@@ -207,7 +240,7 @@ sealed interface ConstAtomExpression : PrimaryExpression, LhsExpression {
 data class LiteralExpression(
     val text: String,
     val type: TypeNode
-): ConstAtomExpression {
+) : ConstAtomExpression {
     override fun toDafny(): String {
         return text
     }
@@ -216,7 +249,7 @@ data class LiteralExpression(
         return LiteralExpression(text, type.clone())
     }
 
-    override fun getTextRepresentation(): String? {
+    override fun getTextRepresentation(): String {
         return text
     }
 
@@ -227,7 +260,7 @@ data class LiteralExpression(
 
 data class ParensExpression(
     val tuple: TupleArgs?
-): ConstAtomExpression {
+) : ConstAtomExpression {
     override fun toDafny(): String {
         return "(${tuple?.toDafny() ?: ""})"
     }
@@ -241,13 +274,18 @@ data class ParensExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        return UndecidedType("parensExpr infer")
+        if (tuple == null) {
+            return EmptyType()
+        }
+        val t = tuple.inferType(st)
+        if (t[0] is UndecidedType) return UndecidedType(t[0].baseString)
+        return TupleType(t)
     }
 }
 
 data class CardinalityExpression(
     val expression: DafnyExpression
-): ConstAtomExpression {
+) : ConstAtomExpression {
     override fun toDafny(): String {
         return "|${expression.toDafny()}|"
     }
@@ -267,12 +305,22 @@ data class CardinalityExpression(
 
 data class TupleArgs(
     val bindings: List<DafnyExpression>
-): CloneableASTNode {
+) : CloneableASTNode {
     override fun toDafny(): String {
         return bindings.joinToString(", ") { x -> x.toDafny() }
     }
 
     override fun clone(): TupleArgs {
         return TupleArgs(bindings.map { it.clone() })
+    }
+
+    fun inferType(st: SymbolTable): List<TypeNode> {
+        for (binding in bindings) {
+            val t = binding.inferType(st)
+            if (t !is UndecidedType) {
+                return List(bindings.size) {t}
+            }
+        }
+        return listOf(UndecidedType())
     }
 }

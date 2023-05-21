@@ -154,6 +154,7 @@ data class MethodDeclaration(
         val idData = IdentifierData(getMethodType(), null)
         st[methodName] = idData
         val child = st.spawn()
+        methodSignature.walk(child, walker)
         blockStatement.walk(child, walker)
     }
 }
@@ -179,6 +180,11 @@ data class MethodSignature(
 
         return Pair(paramList, returnList)
     }
+
+    fun walk(child: SymbolTable, walker: DafnyWalker) {
+        formals.walk(child, walker)
+        returnFormals?.walk(child, walker)
+    }
 }
 
 data class MethodSpecification(
@@ -196,6 +202,7 @@ data class MethodSpecification(
     override fun clone(): MethodSpecification {
         return MethodSpecification(requires?.map { it.clone() }, ensures?.map { it.clone() }, text)
     }
+
 }
 
 data class Formals(
@@ -211,6 +218,10 @@ data class Formals(
 
     fun getTypeList(): List<TypeNode> {
         return identTypes.map { it.getTypeNode() }
+    }
+
+    fun walk(child: SymbolTable, walker: DafnyWalker) {
+        identTypes.map { it.walk(child, walker) }
     }
 }
 
@@ -228,6 +239,10 @@ data class IdentType(
 
     fun getTypeNode(): TypeNode {
         return type
+    }
+
+    fun walk(st: SymbolTable, walker: DafnyWalker) {
+        st[ident] = IdentifierData(type.clone(), "")
     }
 }
 
@@ -278,6 +293,16 @@ data class Expressions(
 
     override fun clone(): Expressions {
         return Expressions(expressions.map {it.clone()})
+    }
+
+    fun extractSingleType(st: SymbolTable): TypeNode {
+        for (expr in expressions) {
+            val t = expr.inferType(st)
+            if (t !is UndecidedType) {
+                return t
+            }
+        }
+        return UndecidedType("Unable to extract from expressions")
     }
 }
 
