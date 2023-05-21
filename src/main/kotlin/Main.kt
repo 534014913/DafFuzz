@@ -13,12 +13,13 @@ import kotlin.system.exitProcess
 const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
 const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
 
-//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
-const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
+const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
+//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
 
 const val seed = 5500
 val rand: IRandom = RandomWrapper(seed)
 const val MUTANT_NUM = 10
+const val TIME_LIMIT = 60
 
 fun main(args: Array<String>) {
     if (args[0] == "directory") {
@@ -112,14 +113,20 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
 //    }
 //    println(method.blockStatement.stmtSymbolTable)
 
-    addInstrumentation(dafnyAst)
+//    addInstrumentation(dafnyAst) TODO: uncommnet
 
     val tmp = File(TMP_DIR + "t_" + file.name)
     tmp.writeText(dafnyAst.toDafny())
 
 //    println(runner.runDafny(tmp, File(WORKING_DIR), "run", "/functionSyntax:3"))
-    val res: String = runner.runDafny(tmp, File(WORKING_DIR), "run") ?: throw Exception()
+    val res: String = runner.runDafny(tmp, File(WORKING_DIR), "/timeLimit:$TIME_LIMIT /functionSyntax:3 /compile:3") ?: throw Exception()
 //    if (res.first(Error))
+    println(res)
+    if (res.contains("time out".toRegex())) {
+        println("\t" + file.name + " timed out when verifying with z3")
+        log.appendText("\t" + file.name + " timed out when verifying with z3\n")
+        return
+    }
     if (res.contains("Error".toRegex())) {
         println("\t" + file.name + " has Error in annotation, aborting...")
         log.appendText("\t" + file.name + " has Error in annotation, aborting...\n")
@@ -156,7 +163,7 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         prunedFile.writeText(mutant.toDafny())
 
         val pruneResult =
-            runner.runDafny(prunedFile, File(WORKING_DIR), "verify") ?: throw Exception()
+            runner.runDafny(prunedFile, File(WORKING_DIR), "/compile:1") ?: throw Exception()
 //    println("-----------------prune result---------------------")
 
         println(pruneResult)

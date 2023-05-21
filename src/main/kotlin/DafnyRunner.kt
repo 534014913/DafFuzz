@@ -1,5 +1,5 @@
+
 import java.io.File
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class DafnyRunner(private val dafnyPath: String) {
@@ -12,11 +12,12 @@ class DafnyRunner(private val dafnyPath: String) {
                 .directory(workingDir)
                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
                 .redirectError(ProcessBuilder.Redirect.PIPE)
+//                .redirectErrorStream(true)
                 .start()
 
-            proc.waitFor(60, TimeUnit.MINUTES)
+            proc.waitFor(5, TimeUnit.MINUTES)
             return proc.inputStream.bufferedReader().readText()
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             e.printStackTrace()
             return null
         }
