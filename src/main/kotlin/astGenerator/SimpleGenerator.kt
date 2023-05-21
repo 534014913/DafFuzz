@@ -25,8 +25,12 @@ class SimpleGenerator(
     }
 
     override fun genDafnyExpressionCharLiteral(): DafnyExpression {
-        val c = "'" + (rand.nextInt(122 - 48) + 48).toChar().toString() + "'"
-        val literal = LiteralExpression(c, CharNode())
+        var c = (rand.nextInt(122 - 48) + 48).toChar().toString()
+        if (c == "\\") {
+            c = "a"
+        }
+        val res = "'$c'"
+        val literal = LiteralExpression(res, CharNode())
         return literalExprToDafnyExprWrapper(literal)
     }
 
@@ -40,6 +44,12 @@ class SimpleGenerator(
         val literal = LiteralExpression(s, StringNode())
         return literalExprToDafnyExprWrapper(literal)
     }
+
+    fun genDafnyExpressionBoolean(result: Boolean, st: SymbolTable) {
+
+    }
+
+
 
     private fun literalExprToDafnyExprWrapper(literal: LiteralExpression): DafnyExpression {
         val primarySuffix = PrimaryExpressionWithSuffix(literal, listOf())
