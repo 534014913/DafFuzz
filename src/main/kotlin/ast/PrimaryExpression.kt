@@ -144,7 +144,7 @@ data class SetDisplayExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        TODO("Not yet implemented")
+        return UndecidedType("SetDisplay infer")
     }
 }
 
@@ -241,7 +241,7 @@ data class ParensExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        TODO("Not yet implemented")
+        return UndecidedType("parensExpr infer")
     }
 }
 

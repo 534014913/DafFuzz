@@ -11,9 +11,14 @@ sealed interface TypeNode : CloneableASTNode {
 }
 
 data class BoolNode(
+    val i: Int,
     override val baseString: String = "bool"
 ) : TypeNode {
-    override fun clone(): BoolNode = BoolNode()
+    override fun clone(): BoolNode = BoolNode(i)
+
+    override fun toDafny(): String {
+        return "Bool $i"
+    }
 }
 
 data class CharNode(
@@ -159,4 +164,5 @@ data class UndecidedType(
     override fun clone(): TypeNode {
         return UndecidedType()
     }
+
 }

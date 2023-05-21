@@ -24,7 +24,7 @@ data class DafnyExpression(
 
     fun inferType(st: SymbolTable): TypeNode {
         return if (impliesExplies.size > 1) {
-            BoolNode()
+            BoolNode(1)
         } else {
             impliesExplies[0].inferType(st)
         }
@@ -77,7 +77,7 @@ data class ImpliesExpliesExpression(
         return if (isSimplest) {
             logical.inferType(st)
         } else {
-            BoolNode()
+            BoolNode(2)
         }
     }
 }
@@ -139,8 +139,8 @@ data class LogicalExpression(
     }
 
     fun inferType(st: SymbolTable): TypeNode {
-        return if (subLogicalOperators.isEmpty()) {
-           BoolNode()
+        return if (subLogicalOperators.isNotEmpty()) {
+           BoolNode(3)
         } else {
             primaryRelational.inferType(st)
         }
@@ -190,7 +190,7 @@ data class RelationalExpression(
 
     fun inferType(st: SymbolTable): TypeNode {
         return if (hasSubTerms) {
-            BoolNode()
+            BoolNode(4)
         } else {
             term.inferType(st)
         }
@@ -419,10 +419,10 @@ data class UnaryExpression(
     }
 
     fun inferType(st: SymbolTable): TypeNode {
-        if (unaryOp != null) {
-            return if (unaryOp == UnaryOperator.NOT) BoolNode() else unary!!.inferType(st)
+        return if (unaryOp != null) {
+            if (unaryOp == UnaryOperator.NOT) BoolNode(4) else unary!!.inferType(st)
         } else {
-            return primary!!.inferType(st)
+            primary!!.inferType(st)
         }
     }
 }

@@ -285,7 +285,7 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitDomainType(ctx: DafnyParser.DomainTypeContext?): TypeNode {
         if (ctx == null) throw Exception()
-        if (ctx.BOOL() != null) return BoolNode()
+        if (ctx.BOOL() != null) return BoolNode(9)
         if (ctx.INT() != null) return IntNode()
         if (ctx.CHAR() != null) return CharNode()
         if (ctx.STRING() != null) return StringNode()
@@ -766,9 +766,9 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
     override fun visitLiteralExpression(ctx: DafnyParser.LiteralExpressionContext?): LiteralExpression {
         if (ctx == null) throw Exception()
         val pair: Pair<String, TypeNode> = if (ctx.FALSE() != null) {
-            Pair("false", BoolNode())
+            Pair("false", BoolNode(8))
         } else if (ctx.TRUE() != null) {
-            Pair("true", BoolNode())
+            Pair("true", BoolNode(8))
         } else if (ctx.NULL() != null) {
             throw RuntimeException("null type not supported")
         } else if (ctx.nat() != null) {
