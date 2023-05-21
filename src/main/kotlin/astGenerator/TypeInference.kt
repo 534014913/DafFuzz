@@ -1,12 +1,12 @@
 package astGenerator
 
 import ast.DafnyExpression
-import ast.IntNode
 import ast.SymbolTable
 import ast.TypeNode
+import ast.UndecidedType
 
 fun inferType(expr: DafnyExpression, st: SymbolTable): TypeNode {
-    return IntNode()
+    return UndecidedType()
 }
 //class TypeInference {
 //

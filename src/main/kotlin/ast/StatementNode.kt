@@ -1,6 +1,5 @@
 package ast
 
-import astGenerator.inferType
 import walker.DafnyWalker
 
 sealed interface StatementNode : CloneableASTNode, WalkableNode {
@@ -93,7 +92,7 @@ data class VariableDeclarationStatement(
             if (l.typeNode != null) {
                 st[l.ident] = IdentifierData(l.typeNode,r.getTextRepresentationOrNull())
             } else {
-                st[l.ident] = IdentifierData(inferType(r, st), r.getTextRepresentationOrNull())
+                st[l.ident] = IdentifierData(r.inferType(st), r.getTextRepresentationOrNull())
             }
         }
     }

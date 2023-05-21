@@ -765,21 +765,21 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitLiteralExpression(ctx: DafnyParser.LiteralExpressionContext?): LiteralExpression {
         if (ctx == null) throw Exception()
-        val text: String = if (ctx.FALSE() != null) {
-            "false"
+        val pair: Pair<String, TypeNode> = if (ctx.FALSE() != null) {
+            Pair("false", BoolNode())
         } else if (ctx.TRUE() != null) {
-            "true"
+            Pair("true", BoolNode())
         } else if (ctx.NULL() != null) {
-            "null"
+            throw RuntimeException("null type not supported")
         } else if (ctx.nat() != null) {
-            ctx.nat().DIGITS().text
+            Pair(ctx.nat().DIGITS().text, IntNode())
         } else if (ctx.CharToken() != null) {
-            ctx.CharToken().text
+            Pair(ctx.CharToken().text, CharNode())
         } else {
             assert(ctx.StringToken() != null)
-            ctx.StringToken().text
+            Pair(ctx.StringToken().text, StringNode())
         }
-        return LiteralExpression(text)
+        return LiteralExpression(pair.first, pair.second)
     }
 
     override fun visitParensExpression(ctx: DafnyParser.ParensExpressionContext?): ParensExpression {

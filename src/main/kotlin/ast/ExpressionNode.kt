@@ -21,6 +21,14 @@ data class DafnyExpression(
             impliesExplies[0].getTextRepresentation()
         }
     }
+
+    fun inferType(st: SymbolTable): TypeNode {
+        return if (impliesExplies.size > 1) {
+            BoolNode()
+        } else {
+            impliesExplies[0].inferType(st)
+        }
+    }
 }
 
 //data class EquivExpression(
@@ -62,6 +70,14 @@ data class ImpliesExpliesExpression(
             logical.getTextRepresentation()
         } else {
             null
+        }
+    }
+
+    fun inferType(st: SymbolTable): TypeNode {
+        return if (isSimplest) {
+            logical.inferType(st)
+        } else {
+            BoolNode()
         }
     }
 }
@@ -121,6 +137,15 @@ data class LogicalExpression(
             primaryRelational.getTextRepresentation()
         }
     }
+
+    fun inferType(st: SymbolTable): TypeNode {
+        return if (subLogicalOperators.isEmpty()) {
+           BoolNode()
+        } else {
+            primaryRelational.inferType(st)
+        }
+
+    }
 }
 
 data class RelationalExpression(
@@ -160,6 +185,14 @@ data class RelationalExpression(
             null
         } else {
             term.getTextRepresentation()
+        }
+    }
+
+    fun inferType(st: SymbolTable): TypeNode {
+        return if (hasSubTerms) {
+            BoolNode()
+        } else {
+            term.inferType(st)
         }
     }
 }
@@ -261,6 +294,10 @@ data class Term(
             asExp.getTextRepresentation()
         }
     }
+
+    fun inferType(st: SymbolTable): TypeNode {
+        return asExp.inferType(st)
+    }
 }
 
 data class AsExpression(
@@ -294,6 +331,15 @@ data class AsExpression(
             null
         } else {
             unary.getTextRepresentation()
+        }
+    }
+
+    fun inferType(st: SymbolTable): TypeNode {
+        return if (asOps.isNotEmpty()) {
+            assert(asOps.size == 1)
+            types[0]
+        } else {
+            unary.inferType(st)
         }
     }
 }
@@ -369,6 +415,14 @@ data class UnaryExpression(
         } else {
             val u = unary!!.getTextRepresentation()
             if (u == null) null else unaryOp!!.toDafny() + u
+        }
+    }
+
+    fun inferType(st: SymbolTable): TypeNode {
+        if (unaryOp != null) {
+            return if (unaryOp == UnaryOperator.NOT) BoolNode() else unary!!.inferType(st)
+        } else {
+            return primary!!.inferType(st)
         }
     }
 }

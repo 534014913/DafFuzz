@@ -4,6 +4,8 @@ sealed interface PrimaryExpression : ExpressionNode {
     override fun clone(): PrimaryExpression
 
     fun getTextRepresentation(): String?
+
+    fun inferType(st: SymbolTable): TypeNode
 }
 
 sealed interface LhsExpression: PrimaryExpression {
@@ -41,6 +43,14 @@ data class PrimaryExpressionWithSuffix(
             primary.getTextRepresentation()
         }
     }
+
+    fun inferType(st: SymbolTable): TypeNode {
+        return if (suffix.isNotEmpty()) {
+            UndecidedType()
+        } else {
+            primary.inferType(st)
+        }
+    }
 }
 
 data class NameSegment(
@@ -54,6 +64,10 @@ data class NameSegment(
 
     override fun getTextRepresentation(): String? {
         return ident
+    }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        return st[ident]?.type ?: UndecidedType()
     }
 }
 
@@ -78,6 +92,10 @@ data class LambdaExpression(
     override fun getTextRepresentation(): String? {
         return null
     }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        TODO("Not yet implemented")
+    }
 }
 
 data class SeqDisplayExpression(
@@ -91,6 +109,10 @@ data class SeqDisplayExpression(
 
     override fun getTextRepresentation(): String? {
         return null
+    }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        TODO("Not yet implemented")
     }
 }
 
@@ -120,6 +142,10 @@ data class SetDisplayExpression(
     override fun getTextRepresentation(): String? {
         return null
     }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        TODO("Not yet implemented")
+    }
 }
 
 //data class EndlessExpression(
@@ -146,6 +172,10 @@ data class LetExpression(
     override fun getTextRepresentation(): String? {
         return null
     }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        TODO("Not yet implemented")
+    }
 }
 
 data class IfExpression(
@@ -164,6 +194,10 @@ data class IfExpression(
     override fun getTextRepresentation(): String? {
         return null
     }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        TODO("Not yet implemented")
+    }
 }
 
 sealed interface ConstAtomExpression : PrimaryExpression, LhsExpression {
@@ -171,18 +205,23 @@ sealed interface ConstAtomExpression : PrimaryExpression, LhsExpression {
 }
 
 data class LiteralExpression(
-    val text: String
+    val text: String,
+    val type: TypeNode
 ): ConstAtomExpression {
     override fun toDafny(): String {
         return text
     }
 
     override fun clone(): LiteralExpression {
-        return LiteralExpression(text)
+        return LiteralExpression(text, type.clone())
     }
 
     override fun getTextRepresentation(): String? {
         return text
+    }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        return type
     }
 }
 
@@ -200,6 +239,10 @@ data class ParensExpression(
     override fun getTextRepresentation(): String? {
         return null
     }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        TODO("Not yet implemented")
+    }
 }
 
 data class CardinalityExpression(
@@ -215,6 +258,10 @@ data class CardinalityExpression(
 
     override fun getTextRepresentation(): String? {
         return null
+    }
+
+    override fun inferType(st: SymbolTable): TypeNode {
+        TODO("Not yet implemented")
     }
 }
 
