@@ -315,12 +315,14 @@ data class TupleArgs(
     }
 
     fun inferType(st: SymbolTable): List<TypeNode> {
+        val res = mutableListOf<TypeNode>()
         for (binding in bindings) {
             val t = binding.inferType(st)
-            if (t !is UndecidedType) {
-                return List(bindings.size) {t}
+            if (t is UndecidedType) {
+                return listOf(UndecidedType("Undecided tuple arg"))
             }
+            res.add(t)
         }
-        return listOf(UndecidedType())
+        return res.toList()
     }
 }
