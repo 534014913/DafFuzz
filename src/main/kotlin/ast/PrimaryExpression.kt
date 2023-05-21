@@ -100,7 +100,7 @@ data class LambdaExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        TODO("Not yet implemented")
+        return UndecidedType("lambda expr Not supported")
     }
 }
 
@@ -229,7 +229,7 @@ data class IfExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        TODO("Not yet implemented")
+        return UndecidedType("If expr not supported")
     }
 }
 
@@ -299,7 +299,7 @@ data class CardinalityExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
-        TODO("Not yet implemented")
+        return UndecidedType("cardinality not supported")
     }
 }
 
