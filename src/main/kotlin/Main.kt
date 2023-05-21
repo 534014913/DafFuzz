@@ -1,7 +1,5 @@
-
 import antlr.DafnyLexer
 import antlr.DafnyParser
-import ast.SymbolTable
 import mutator.PruneMutator
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
@@ -14,8 +12,9 @@ import kotlin.system.exitProcess
 
 const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
 const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
-const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
-//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
+
+//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
+const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
 
 const val seed = 5500
 val rand: IRandom = RandomWrapper(seed)
@@ -69,15 +68,19 @@ fun processDir(args: Array<String>) {
     println(dir)
     val file = File(dir)
     val runner = DafnyRunner(DAFNY_PATH)
+    val log = File("log.txt")
+    log.writeText(dir + "\n")
 //    file.walkTopDown().forEach { processDafny(it) }
-    file.walkTopDown().forEach { processDafny(it, runner) }
+    file.walkTopDown().forEach { processDafny(it, runner, log) }
 }
 
-fun processDafny(file: File, runner: DafnyRunner) {
+fun processDafny(file: File, runner: DafnyRunner, log: File) {
     if (!file.isFile) {
         return
     }
-    println("Processing ${file.name}")
+    println("<=========================== PROCESSING ${file.name} ==================================>")
+    log.appendText("<=========================== PROCESSING ${file.name} ==================================>\n")
+
     val streamedInFile = FileInputStream(file)
     val input = CharStreams.fromStream(streamedInFile)
     streamedInFile.close()
@@ -88,24 +91,26 @@ fun processDafny(file: File, runner: DafnyRunner) {
 
     val parserTree = parser.dafny()
     if (parser.numberOfSyntaxErrors > 0) {
+
         println("Lexer/Parser error in the input file")
+        log.writeText("Lexer/Parser error in the input file")
+
         exitProcess(1)
     }
 
     val dafnyAst = DafnyVisitor.makeAST(parserTree)
 
-    val st = SymbolTable(null,)
+//    val st = SymbolTable(null,)
     val walker = DafnyWalker()
     walker.walkDafny(dafnyAst)
-    val method = dafnyAst.toplevels[0].classMember.method!!
-    for (stmt in method.blockStatement.statements) {
-        println(stmt.stmtSymbolTable)
-//        println(stmt.nonLabelStmt.stmtSymbolTable)
-        assert(stmt.stmtSymbolTable.toString() == stmt.nonLabelStmt.stmtSymbolTable.toString())
-        println(stmt.toDafny())
-    }
-    println(method.blockStatement.stmtSymbolTable)
-    return
+//    val method = dafnyAst.toplevels[0].classMember.method!!
+//    for (stmt in method.blockStatement.statements) {
+//        println(stmt.stmtSymbolTable)
+////        println(stmt.nonLabelStmt.stmtSymbolTable)
+//        assert(stmt.stmtSymbolTable.toString() == stmt.nonLabelStmt.stmtSymbolTable.toString())
+//        println(stmt.toDafny())
+//    }
+//    println(method.blockStatement.stmtSymbolTable)
 
     addInstrumentation(dafnyAst)
 
@@ -117,6 +122,7 @@ fun processDafny(file: File, runner: DafnyRunner) {
 //    if (res.first(Error))
     if (res.contains("Error".toRegex())) {
         println("\t" + file.name + " has Error in annotation, aborting...")
+        log.appendText("\t" + file.name + " has Error in annotation, aborting...\n")
         return
     }
 //    println("----------------parse result-------------------")
@@ -137,14 +143,25 @@ fun processDafny(file: File, runner: DafnyRunner) {
     var i = 1
     for (mutant in mutated) {
         println("----------------Info Mutant $i-----------------")
+        println(mutant.changeHistory.joinToString("\n"))
+        println("<======>")
         println(mutant.pruned.joinToString("\n") { it.toDafny() })
+
+        log.appendText("----------------Info Mutant $i-----------------\n")
+        log.appendText(mutant.changeHistory.joinToString("\n") + "\n")
+        log.appendText("<======>\n")
+        log.appendText(mutant.pruned.joinToString("\n") { it.toDafny() } + "\n")
+
         val prunedFile = File(TMP_DIR + "p_" + "$i" + "_" + file.name)
         prunedFile.writeText(mutant.toDafny())
 
         val pruneResult =
             runner.runDafny(prunedFile, File(WORKING_DIR), "verify") ?: throw Exception()
 //    println("-----------------prune result---------------------")
-    println(pruneResult)
+
+        println(pruneResult)
+        log.appendText(pruneResult + "\n")
+
         val verifyAndError = mutableListOf<Int>()
         for (tok in pruneResult.split("\\s".toRegex())) {
             val parse = tok.toIntOrNull()
@@ -154,6 +171,7 @@ fun processDafny(file: File, runner: DafnyRunner) {
         }
         if (verifyAndError.size != 2 || verifyAndError[1] != 0) {
             println("\tERROR in file ${file.absoluteFile}")
+            log.appendText("\tERROR in file ${file.absoluteFile}\n")
         }
         i++
     }

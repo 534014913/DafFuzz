@@ -1,6 +1,17 @@
 package astGenerator
 
-import ast.TypeNode
-sealed interface AstGenerator {
-    fun genLiteral(type: TypeNode, ctx: Context)
+import ast.DafnyExpression
+import utils.IRandom
+
+sealed class AstGenerator(
+    val rand: IRandom
+) {
+    abstract fun genDafnyExpressionIntLiteral(): DafnyExpression
+
+    abstract fun genDafnyExpressionBoolLiteral(): DafnyExpression
+
+    abstract fun genDafnyExpressionCharLiteral(): DafnyExpression
+
+    abstract fun genDafnyExpressionStringLiteral(): DafnyExpression
+
 }

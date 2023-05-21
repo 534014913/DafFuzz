@@ -3,6 +3,7 @@ package mutator
 import ast.BlockStatement
 import ast.Dafny
 import ast.DafnyStatement
+import astGenerator.SimpleGenerator
 import utils.IRandom
 import kotlin.math.min
 
@@ -14,9 +15,24 @@ class PruneMutator(
     val shuffle: Boolean,
     rand: IRandom
 ): Mutator(rand){
+    private val astGenerator = SimpleGenerator(rand)
 
     override fun mutateDafny(dafny: Dafny): Dafny {
         val dafnyClone = dafny.clone()
+//        println("----------symbol table null before clone?-----------")
+//        for (toplevel in dafny.toplevels) {
+//            if (toplevel.classMember.isMethod) {
+//                println(toplevel.classMember.method!!.blockStatement.stmtSymbolTable == null)
+//            }
+//        }
+//        println("---------------------------------------------------")
+//        println("----------symbol table null after clone?-----------")
+//        for (toplevel in dafnyClone.toplevels) {
+//            if (toplevel.classMember.isMethod) {
+//                println(toplevel.classMember.method!!.blockStatement.stmtSymbolTable == null)
+//            }
+//        }
+//        println("---------------------------------------------------")
         val deadBlocks = findDeadBlocks(dafnyClone)
         for (db in deadBlocks) {
             pruneStatement(db, dafnyClone)
@@ -55,13 +71,15 @@ class PruneMutator(
 
     private fun pruneStatement(block: BlockStatement, dafnyClone: Dafny) {
         val canPrune = min(rand.nextInt(pruneNumber), (block.statements.size * PRUNE_STATEMENT_RATIO).toInt())
+//        println(canPrune)
         if (shuffle) {
             block.statements.shuffle()
         }
         repeat(canPrune) {
             val id = rand.nextInt(block.statements.size)
-            val s = block.statements.removeAt(id)
-            dafnyClone.addPruned(s)
+            val s = block.statements[id]
+            dafnyClone.addPruned(s.clone())
+            s.changeRhs(astGenerator, dafnyClone.changeHistory)
         }
     }
 }

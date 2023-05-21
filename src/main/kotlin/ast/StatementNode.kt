@@ -1,5 +1,6 @@
 package ast
 
+import astGenerator.AstGenerator
 import walker.DafnyWalker
 
 sealed interface StatementNode : CloneableASTNode, WalkableNode {
@@ -25,7 +26,7 @@ data class BlockStatement(
     }
 
     override fun clone(): BlockStatement {
-        return BlockStatement(statements.map { it.clone() }.toMutableList(), ident, printIdent)
+        return BlockStatement(statements.map { it.clone() }.toMutableList(), ident, printIdent, stmtSymbolTable?.clone())
     }
 
     /*
@@ -55,7 +56,7 @@ data class DafnyStatement(
     }
 
     override fun clone(): DafnyStatement {
-        return DafnyStatement(label, nonLabelStmt.clone())
+        return DafnyStatement(label, nonLabelStmt.clone(), stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
@@ -63,12 +64,18 @@ data class DafnyStatement(
         stmtSymbolTable = st.clone()
         nonLabelStmt.walk(st, walker)
     }
+
+    fun changeRhs(astGenerator: AstGenerator, history: MutableList<String>) {
+        if (nonLabelStmt is VariableDeclarationStatement) {
+            nonLabelStmt.changeRhs(astGenerator, history)
+        }
+    }
 }
 
 data class VariableDeclarationStatement(
     val hasGets: Boolean,
     val lhs: List<LocalIdentTypeOptional>,
-    val rhs: List<DafnyExpression>,
+    var rhs: List<DafnyExpression>,
     override var stmtSymbolTable: SymbolTable? = null
 ) : StatementNode {
     override fun toDafny(): String {
@@ -83,7 +90,7 @@ data class VariableDeclarationStatement(
     }
 
     override fun clone(): VariableDeclarationStatement {
-        return VariableDeclarationStatement(hasGets, lhs.map { it.clone() }, rhs.map { it.clone() })
+        return VariableDeclarationStatement(hasGets, lhs.map { it.clone() }, rhs.map { it.clone() }, stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
@@ -96,6 +103,26 @@ data class VariableDeclarationStatement(
             }
         }
     }
+
+    fun changeRhs(astGenerator: AstGenerator, history: MutableList<String>) {
+        if (rhs.size == 1) {
+            var h = rhs[0].toDafny()
+            when (rhs[0].inferType(stmtSymbolTable!!)) {
+                is IntNode -> rhs = listOf(astGenerator.genDafnyExpressionIntLiteral())
+                is BoolNode -> rhs = listOf(astGenerator.genDafnyExpressionBoolLiteral())
+                is CharNode -> rhs = listOf(astGenerator.genDafnyExpressionCharLiteral())
+                is StringNode -> rhs = listOf(astGenerator.genDafnyExpressionStringLiteral())
+                else -> {
+                    h += " -> Can not inferType"
+                    history.add(h)
+                    return
+                }
+            }
+            h += " -> " + rhs[0].toDafny() + ""
+            history.add(h)
+        }
+    }
+
 }
 
 data class UpdateStatement(
@@ -115,7 +142,7 @@ data class UpdateStatement(
     }
 
     override fun clone(): UpdateStatement {
-        return UpdateStatement(hasGets, lhss.map { it.clone() }, rhss.map { it.clone() })
+        return UpdateStatement(hasGets, lhss.map { it.clone() }, rhss.map { it.clone() }, stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
@@ -138,7 +165,7 @@ data class PrintStatement(
     }
 
     override fun clone(): PrintStatement {
-        return PrintStatement(expressions.map { it.clone() })
+        return PrintStatement(expressions.map { it.clone() }, stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
@@ -155,7 +182,7 @@ data class ReturnStatement(
     }
 
     override fun clone(): ReturnStatement {
-        return ReturnStatement(rhs.map { it.clone() })
+        return ReturnStatement(rhs.map { it.clone() }, stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
@@ -174,7 +201,7 @@ data class IfStatement(
     }
 
     override fun clone(): IfStatement {
-        return IfStatement(guard.clone(), thenClause.clone(), elseClause?.clone())
+        return IfStatement(guard.clone(), thenClause.clone(), elseClause?.clone(), stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
@@ -195,7 +222,7 @@ data class ElseSubStatement(
     }
 
     override fun clone(): ElseSubStatement {
-        return ElseSubStatement(block.clone())
+        return ElseSubStatement(block.clone(), stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
@@ -213,7 +240,7 @@ data class AssertStatement(
     }
 
     override fun clone(): StatementNode {
-        return AssertStatement(expression.clone())
+        return AssertStatement(expression.clone(), stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
@@ -230,7 +257,7 @@ data class AssumeStatement(
     }
 
     override fun clone(): StatementNode {
-        return AssertStatement(expression.clone())
+        return AssertStatement(expression.clone(), stmtSymbolTable?.clone())
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {

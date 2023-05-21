@@ -30,7 +30,8 @@ sealed interface DafnyDeclaration {
 data class Dafny(
     val includes: List<IncludeDirective>,
     var toplevels: List<TopDeclaration>,
-    var pruned: MutableList<DafnyStatement> = mutableListOf()
+    var pruned: MutableList<DafnyStatement> = mutableListOf(),
+    val changeHistory: MutableList<String> = mutableListOf()
 ) : CloneableASTNode, WalkableNode {
     override fun toDafny(): String {
         return includes.joinToString("\n") { x -> x.toDafny() } +
