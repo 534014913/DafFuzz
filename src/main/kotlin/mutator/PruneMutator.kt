@@ -3,6 +3,7 @@ package mutator
 import ast.BlockStatement
 import ast.Dafny
 import ast.DafnyStatement
+import ast.UpdateStatement
 import astGenerator.SimpleGenerator
 import utils.IRandom
 import kotlin.math.min
@@ -14,7 +15,7 @@ class PruneMutator(
     private val pruneNumber: Int, // number of statements in a block statement that can be pruned
     val shuffle: Boolean,
     rand: IRandom
-): Mutator(rand){
+): AbstractMutator(rand){
     private val astGenerator = SimpleGenerator(rand)
 
     override fun mutateDafny(dafny: Dafny): Dafny {
@@ -81,5 +82,15 @@ class PruneMutator(
             dafnyClone.addPruned(s.clone())
             s.changeRhs(astGenerator, dafnyClone.changeHistory)
         }
+        // also remove any update statement in dead block
+        val newList = mutableListOf<DafnyStatement>()
+        for (stmt in block.statements) {
+            if (stmt.nonLabelStmt is UpdateStatement) {
+                dafnyClone.addPruned(stmt.clone())
+            } else {
+                newList.add(stmt)
+            }
+        }
+        block.statements = newList
     }
 }

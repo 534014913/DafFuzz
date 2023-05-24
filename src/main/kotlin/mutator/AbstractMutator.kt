@@ -3,7 +3,7 @@ package mutator
 import ast.Dafny
 import utils.IRandom
 
-abstract class Mutator(
+abstract class AbstractMutator(
     val rand: IRandom
 ) {
     fun genMutants(dafny: Dafny, mutantsNum: Int): List<Dafny> {
