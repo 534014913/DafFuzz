@@ -152,7 +152,7 @@ data class MethodDeclaration(
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
         assert(walker.topST === st)
-        val idData = IdentifierData(getMethodType(), null)
+        val idData = IdentifierData(getMethodType(), null, null)
         st[methodName] = idData
         val child = st.spawn()
         methodSignature.walk(child, walker)
@@ -243,7 +243,7 @@ data class IdentType(
     }
 
     fun walk(st: SymbolTable, walker: DafnyWalker) {
-        st[ident] = IdentifierData(type.clone(), "")
+        st[ident] = IdentifierData(type.clone(), null, null)
     }
 }
 
