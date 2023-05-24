@@ -109,9 +109,9 @@ data class LogicalExpression(
 ) : ExpressionNode {
     override fun toDafny(): String {
         var ret = ""
-        if (firstLogical != null) ret += "${firstLogical.toDafny()} "
+        if (firstLogical != null) ret += "${firstLogical.toDafny()}"
         ret += primaryRelational.toDafny()
-        ret += " "
+        if (hasMoreRelational) ret += " "
         var i = 0
         while (i < subLogicalOperators.size) {
             ret += "${subLogicalOperators[i].toDafny()} ${subRelational[i].toDafny()}"

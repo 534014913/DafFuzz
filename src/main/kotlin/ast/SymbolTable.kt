@@ -68,6 +68,7 @@ data class IdentifierData(
     // if rhs is ident then the textRep is the name of the ident,
     // if rhs is literal, then the textRep is the literal
     val textRepresentation: String?,
+    val rhsRepresentation: String?,
 //    val constant: Boolean = false
 ) {
     fun clone(): IdentifierData {
@@ -75,7 +76,7 @@ data class IdentifierData(
     }
 
     override fun toString(): String {
-        return "idData(${type.toDafny()}, $textRepresentation)"
+        return "idData(${type.toDafny()}, $textRepresentation, $rhsRepresentation)"
     }
 }
 

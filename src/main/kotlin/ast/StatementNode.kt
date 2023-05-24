@@ -97,9 +97,9 @@ data class VariableDeclarationStatement(
         stmtSymbolTable = st.clone()
         lhs.zip(rhs).forEach { (l, r) ->
             if (l.typeNode != null) {
-                st[l.ident] = IdentifierData(l.typeNode,r.getTextRepresentationOrNull())
+                st[l.ident] = IdentifierData(l.typeNode,r.getTextRepresentationOrNull(), r.toDafny())
             } else {
-                st[l.ident] = IdentifierData(r.inferType(st), r.getTextRepresentationOrNull())
+                st[l.ident] = IdentifierData(r.inferType(st), r.getTextRepresentationOrNull(), r.toDafny())
             }
         }
     }
