@@ -10,10 +10,12 @@ sealed interface TypeNode : CloneableASTNode {
     override fun clone(): TypeNode
 }
 
+sealed interface BasicType: TypeNode
+
 data class BoolNode(
     val i: Int,
     override val baseString: String = "bool"
-) : TypeNode {
+) : TypeNode, BasicType {
     override fun clone(): BoolNode = BoolNode(i)
 
     override fun toDafny(): String {
@@ -23,19 +25,19 @@ data class BoolNode(
 
 data class CharNode(
     override val baseString: String = "char"
-) : TypeNode {
+) : TypeNode, BasicType {
     override fun clone(): CharNode = CharNode()
 }
 
 data class IntNode(
     override val baseString: String = "int"
-) : TypeNode {
+) : TypeNode, BasicType {
     override fun clone(): IntNode = IntNode()
 }
 
 data class StringNode(
     override val baseString: String = "string"
-) : TypeNode {
+) : TypeNode, BasicType {
     override fun clone(): StringNode = StringNode()
 }
 
