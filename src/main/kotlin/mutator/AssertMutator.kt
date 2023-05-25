@@ -62,11 +62,11 @@ class AssertMutator(
         val block = lives[rand.nextInt(lives.size)]
         val id = rand.nextInt(block.statements.size)
         val stmt = block.statements[id]
-        val assertStmt = generator.genAssertStatement(false)
+        val assertStmt = generator.genAssertStatement(false, stmt.stmtSymbolTable)
         block.statements.add(id, assertStmt)
     }
 
     private fun insertFalseAssertsAssumesToDead(deads: List<BlockStatement>) {
-
+        TODO("Not implemented")
     }
 }
