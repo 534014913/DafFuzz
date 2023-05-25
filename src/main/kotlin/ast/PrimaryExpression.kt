@@ -207,6 +207,9 @@ data class LetExpression(
     }
 
     override fun inferType(st: SymbolTable): TypeNode {
+        if (localIdents.size == 1) {
+            return localIdents[0].inferType(st)
+        }
         return UndecidedType("LetEpxr not supported")
     }
 }
@@ -319,7 +322,7 @@ data class TupleArgs(
         for (binding in bindings) {
             val t = binding.inferType(st)
             if (t is UndecidedType) {
-                return listOf(UndecidedType("Undecided tuple arg"))
+                return listOf(UndecidedType(t.baseString))
             }
             res.add(t)
         }

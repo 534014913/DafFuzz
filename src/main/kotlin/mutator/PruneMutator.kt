@@ -14,7 +14,7 @@ class PruneMutator(
     private val pruneNumber: Int, // number of statements in a block statement that can be pruned
     val shuffle: Boolean,
     rand: IRandom
-): AbstractMutator(rand){
+) : AbstractMutator(rand) {
     private val astGenerator = SimpleGenerator(rand)
 
     override fun mutateDafny(dafny: Dafny): Dafny {
@@ -62,7 +62,10 @@ class PruneMutator(
         }
     }
 
-    private fun addDeadBlocksDafnyStatement(dStatement: DafnyStatement, deadBlocks: MutableList<BlockStatement>) {
+    private fun addDeadBlocksDafnyStatement(
+        dStatement: DafnyStatement,
+        deadBlocks: MutableList<BlockStatement>
+    ) {
         when (val stmt = dStatement.nonLabelStmt) {
             is BlockStatement -> addDeadBlocks(stmt, deadBlocks)
             else -> return
@@ -70,7 +73,10 @@ class PruneMutator(
     }
 
     private fun pruneStatement(block: BlockStatement, dafnyClone: Dafny) {
-        val canPrune = min(rand.nextPositiveInt(pruneNumber), (block.statements.size * PRUNE_STATEMENT_RATIO).toInt() + 2)
+        val canPrune = min(
+            rand.nextPositiveInt(pruneNumber),
+            (block.statements.size * PRUNE_STATEMENT_RATIO).toInt() + 2
+        )
 //        println(canPrune)
         if (shuffle) {
             block.statements.shuffle()
@@ -79,9 +85,13 @@ class PruneMutator(
         repeat(canPrune) {
             val id = rand.nextInt(block.statements.size)
             val s = block.statements[id]
-            dafnyClone.addPruned(s.clone())
-            s.annotateLhsWithType(dafnyClone.changeHistory)
-            s.havocRhs(astGenerator, dafnyClone.changeHistory)
+            if (s.nonLabelStmt is BlockStatement) {
+                pruneStatement(s.nonLabelStmt, dafnyClone)
+            } else {
+                dafnyClone.addPruned(s.clone())
+                s.annotateLhsWithType(dafnyClone.changeHistory)
+                s.havocRhs(astGenerator, dafnyClone.changeHistory)
+            }
         }
         // also remove any update statement in dead block
 //        val newList = mutableListOf<DafnyStatement>()

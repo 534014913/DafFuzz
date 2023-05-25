@@ -283,8 +283,11 @@ data class LocalIdentTypeOptional(
     override fun clone(): LocalIdentTypeOptional {
         return LocalIdentTypeOptional(ident, typeNode?.clone())
     }
-}
 
+    fun inferType(st: SymbolTable): TypeNode {
+        return typeNode ?: UndecidedType("no type in local ident, possibly from let epxr")
+    }
+}
 data class Expressions(
     val expressions: List<DafnyExpression>
 ) : CloneableASTNode {
