@@ -3,7 +3,6 @@ package mutator
 import ast.BlockStatement
 import ast.Dafny
 import ast.DafnyStatement
-import ast.UpdateStatement
 import astGenerator.SimpleGenerator
 import utils.IRandom
 import kotlin.math.min
@@ -59,11 +58,11 @@ class PruneMutator(
             deadBlocks.add(block)
         }
         for (ds in block.statements) {
-            addDeadBlocksDS(ds, deadBlocks)
+            addDeadBlocksDafnyStatement(ds, deadBlocks)
         }
     }
 
-    private fun addDeadBlocksDS(dStatement: DafnyStatement, deadBlocks: MutableList<BlockStatement>) {
+    private fun addDeadBlocksDafnyStatement(dStatement: DafnyStatement, deadBlocks: MutableList<BlockStatement>) {
         when (val stmt = dStatement.nonLabelStmt) {
             is BlockStatement -> addDeadBlocks(stmt, deadBlocks)
             else -> return
@@ -71,26 +70,28 @@ class PruneMutator(
     }
 
     private fun pruneStatement(block: BlockStatement, dafnyClone: Dafny) {
-        val canPrune = min(rand.nextInt(pruneNumber), (block.statements.size * PRUNE_STATEMENT_RATIO).toInt())
+        val canPrune = min(rand.nextPositiveInt(pruneNumber), (block.statements.size * PRUNE_STATEMENT_RATIO).toInt() + 2)
 //        println(canPrune)
         if (shuffle) {
             block.statements.shuffle()
         }
+        println("prune $canPrune statements")
         repeat(canPrune) {
             val id = rand.nextInt(block.statements.size)
             val s = block.statements[id]
             dafnyClone.addPruned(s.clone())
-            s.changeRhs(astGenerator, dafnyClone.changeHistory)
+            s.annotateLhsWithType(dafnyClone.changeHistory)
+            s.havocRhs(astGenerator, dafnyClone.changeHistory)
         }
         // also remove any update statement in dead block
-        val newList = mutableListOf<DafnyStatement>()
-        for (stmt in block.statements) {
-            if (stmt.nonLabelStmt is UpdateStatement) {
-                dafnyClone.addPruned(stmt.clone())
-            } else {
-                newList.add(stmt)
-            }
-        }
-        block.statements = newList
+//        val newList = mutableListOf<DafnyStatement>()
+//        for (stmt in block.statements) {
+//            if (stmt.nonLabelStmt is UpdateStatement && rand.nextBoolean()) {
+//                dafnyClone.addPruned(stmt.clone())
+//            } else {
+//                newList.add(stmt)
+//            }
+//        }
+//        block.statements = newList
     }
 }

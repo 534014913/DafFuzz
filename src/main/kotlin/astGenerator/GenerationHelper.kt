@@ -41,3 +41,7 @@ fun genDafnyExpressionFromImpliesExplies(vararg impliesExplies: ImpliesExpliesEx
    if (impliesExplies.isEmpty()) throw RuntimeException("should not be empty")
    return DafnyExpression(impliesExplies.toList())
 }
+
+fun genHavocDafnyExpression(): DafnyExpression {
+    return DafnyExpression(emptyList(), isHavoc = true)
+}

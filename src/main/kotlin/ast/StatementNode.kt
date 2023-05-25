@@ -1,6 +1,7 @@
 package ast
 
 import astGenerator.AstGenerator
+import astGenerator.genHavocDafnyExpression
 import walker.DafnyWalker
 
 sealed interface StatementNode : CloneableASTNode, WalkableNode {
@@ -26,7 +27,12 @@ data class BlockStatement(
     }
 
     override fun clone(): BlockStatement {
-        return BlockStatement(statements.map { it.clone() }.toMutableList(), ident, printIdent, stmtSymbolTable?.clone())
+        return BlockStatement(
+            statements.map { it.clone() }.toMutableList(),
+            ident,
+            printIdent,
+            stmtSymbolTable?.clone()
+        )
     }
 
     /*
@@ -65,16 +71,25 @@ data class DafnyStatement(
         nonLabelStmt.walk(st, walker)
     }
 
-    fun changeRhs(astGenerator: AstGenerator, history: MutableList<String>) {
+    fun havocRhs(astGenerator: AstGenerator, history: MutableList<String>) {
         if (nonLabelStmt is VariableDeclarationStatement) {
-            nonLabelStmt.changeRhs(astGenerator, history)
+            nonLabelStmt.havocRhs(astGenerator, history)
+        }
+        if (nonLabelStmt is UpdateStatement) {
+            nonLabelStmt.havocRhs(astGenerator, history)
+        }
+    }
+
+    fun annotateLhsWithType(history: MutableList<String>) {
+        if (nonLabelStmt is VariableDeclarationStatement) {
+            nonLabelStmt.annotateLhsWithType(history)
         }
     }
 }
 
 data class VariableDeclarationStatement(
     val hasGets: Boolean,
-    val lhs: List<LocalIdentTypeOptional>,
+    val lhs: MutableList<LocalIdentTypeOptional>,
     var rhs: List<DafnyExpression>,
     override var stmtSymbolTable: SymbolTable? = null
 ) : StatementNode {
@@ -90,36 +105,56 @@ data class VariableDeclarationStatement(
     }
 
     override fun clone(): VariableDeclarationStatement {
-        return VariableDeclarationStatement(hasGets, lhs.map { it.clone() }, rhs.map { it.clone() }, stmtSymbolTable?.clone())
+        return VariableDeclarationStatement(
+            hasGets,
+            lhs.map { it.clone() }.toMutableList(),
+            rhs.map { it.clone() },
+            stmtSymbolTable?.clone()
+        )
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
         stmtSymbolTable = st.clone()
         lhs.zip(rhs).forEach { (l, r) ->
             if (l.typeNode != null) {
-                st[l.ident] = IdentifierData(l.typeNode,r.getTextRepresentationOrNull(), r.toDafny())
+                st[l.ident] =
+                    IdentifierData(l.typeNode, r.getTextRepresentationOrNull(), r.toDafny())
             } else {
-                st[l.ident] = IdentifierData(r.inferType(st), r.getTextRepresentationOrNull(), r.toDafny())
+                st[l.ident] =
+                    IdentifierData(r.inferType(st), r.getTextRepresentationOrNull(), r.toDafny())
             }
         }
     }
 
-    fun changeRhs(astGenerator: AstGenerator, history: MutableList<String>) {
+    fun havocRhs(astGenerator: AstGenerator, history: MutableList<String>) {
         if (rhs.size == 1) {
             var h = rhs[0].toDafny()
-            when (rhs[0].inferType(stmtSymbolTable!!)) {
-                is IntNode -> rhs = listOf(astGenerator.genDafnyExpressionIntLiteral())
-                is BoolNode -> rhs = listOf(astGenerator.genDafnyExpressionBoolLiteral())
-                is CharNode -> rhs = listOf(astGenerator.genDafnyExpressionCharLiteral())
-                is StringNode -> rhs = listOf(astGenerator.genDafnyExpressionStringLiteral())
-                else -> {
-                    h += " -> Can not inferType"
-                    history.add(h)
-                    return
-                }
-            }
+            rhs = listOf(genHavocDafnyExpression())
+//            when (rhs[0].inferType(stmtSymbolTable!!)) {
+//                is IntNode -> rhs = listOf(astGenerator.genDafnyExpressionIntLiteral())
+//                is BoolNode -> rhs = listOf(astGenerator.genDafnyExpressionBoolLiteral())
+//                is CharNode -> rhs = listOf(astGenerator.genDafnyExpressionCharLiteral())
+//                is StringNode -> rhs = listOf(astGenerator.genDafnyExpressionStringLiteral())
+//                else -> {
+//                    h += " -> Can not inferType"
+//                    history.add(h)
+//                    return
+//                }
+//            }
             h += " -> " + rhs[0].toDafny() + ""
             history.add(h)
+        }
+    }
+
+    fun annotateLhsWithType(history: MutableList<String>) {
+        if (lhs.size == 1) {
+            val r = rhs[0]
+            val l = lhs[0]
+            var his = l.toDafny() + " -> "
+            val type = l.typeNode ?: r.inferType(stmtSymbolTable!!)
+            lhs[0] = LocalIdentTypeOptional(l.ident, type)
+            his += lhs[0].toDafny()
+            history.add(his)
         }
     }
 
@@ -128,7 +163,7 @@ data class VariableDeclarationStatement(
 data class UpdateStatement(
     val hasGets: Boolean,
     val lhss: List<Lhs>,
-    val rhss: List<DafnyExpression>,
+    var rhss: List<DafnyExpression>,
     override var stmtSymbolTable: SymbolTable? = null
 ) : StatementNode {
     override fun toDafny(): String {
@@ -142,16 +177,42 @@ data class UpdateStatement(
     }
 
     override fun clone(): UpdateStatement {
-        return UpdateStatement(hasGets, lhss.map { it.clone() }, rhss.map { it.clone() }, stmtSymbolTable?.clone())
+        return UpdateStatement(
+            hasGets,
+            lhss.map { it.clone() },
+            rhss.map { it.clone() },
+            stmtSymbolTable?.clone()
+        )
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
         for (lhs in lhss) {
             assert(lhs.suffixes.isEmpty())
         }
-        stmtSymbolTable  = st.clone()
-        lhss.zip(rhss).forEach{
-            (l, r) -> st[l.getIdent()] = st[l.getIdent()]!!.copy(textRepresentation = r.getTextRepresentationOrNull())
+        stmtSymbolTable = st.clone()
+        lhss.zip(rhss).forEach { (l, r) ->
+            st[l.getIdent()] =
+                st[l.getIdent()]!!.copy(textRepresentation = r.getTextRepresentationOrNull())
+        }
+    }
+
+    fun havocRhs(astGenerator: AstGenerator, history: MutableList<String>) {
+        if (rhss.size == 1) {
+            var h = rhss[0].toDafny()
+            rhss = listOf(genHavocDafnyExpression())
+//            when (rhs[0].inferType(stmtSymbolTable!!)) {
+//                is IntNode -> rhs = listOf(astGenerator.genDafnyExpressionIntLiteral())
+//                is BoolNode -> rhs = listOf(astGenerator.genDafnyExpressionBoolLiteral())
+//                is CharNode -> rhs = listOf(astGenerator.genDafnyExpressionCharLiteral())
+//                is StringNode -> rhs = listOf(astGenerator.genDafnyExpressionStringLiteral())
+//                else -> {
+//                    h += " -> Can not inferType"
+//                    history.add(h)
+//                    return
+//                }
+//            }
+            h += " -> " + rhss[0].toDafny() + ""
+            history.add(h)
         }
     }
 }
@@ -201,7 +262,12 @@ data class IfStatement(
     }
 
     override fun clone(): IfStatement {
-        return IfStatement(guard.clone(), thenClause.clone(), elseClause?.clone(), stmtSymbolTable?.clone())
+        return IfStatement(
+            guard.clone(),
+            thenClause.clone(),
+            elseClause?.clone(),
+            stmtSymbolTable?.clone()
+        )
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {

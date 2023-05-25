@@ -4,10 +4,15 @@ sealed interface ExpressionNode : CloneableASTNode {
 }
 
 data class DafnyExpression(
-    val impliesExplies: List<ImpliesExpliesExpression>
+    val impliesExplies: List<ImpliesExpliesExpression>,
+    val isHavoc: Boolean = false
 ) : ExpressionNode {
     override fun toDafny(): String {
-        return impliesExplies.joinToString(" <==> ") { x -> x.toDafny() }
+        return if (isHavoc) {
+            "*"
+        } else {
+            impliesExplies.joinToString(" <==> ") { x -> x.toDafny() }
+        }
     }
 
     override fun clone(): DafnyExpression {
@@ -15,7 +20,9 @@ data class DafnyExpression(
     }
 
     fun getTextRepresentationOrNull(): String? {
-        return if (impliesExplies.size > 1) {
+        return if (isHavoc) {
+            "*"
+        } else if (impliesExplies.size > 1) {
             null
         } else {
             impliesExplies[0].getTextRepresentation()
@@ -23,7 +30,10 @@ data class DafnyExpression(
     }
 
     fun inferType(st: SymbolTable): TypeNode {
-        return if (impliesExplies.size > 1) {
+
+        return if (isHavoc) {
+            UndecidedType("havoced type is undecided")
+        } else if (impliesExplies.size > 1) {
             BoolNode(1)
         } else {
             impliesExplies[0].inferType(st)
@@ -140,7 +150,7 @@ data class LogicalExpression(
 
     fun inferType(st: SymbolTable): TypeNode {
         return if (subLogicalOperators.isNotEmpty()) {
-           BoolNode(3)
+            BoolNode(3)
         } else {
             primaryRelational.inferType(st)
         }

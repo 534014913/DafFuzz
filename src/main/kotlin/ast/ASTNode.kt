@@ -277,7 +277,7 @@ data class LocalIdentTypeOptional(
     val typeNode: TypeNode?,
 ) : CloneableASTNode {
     override fun toDafny(): String {
-        return "$ident ${if (typeNode == null) "" else ": ${typeNode.toDafny()}"}"
+        return "$ident${if (typeNode == null) "" else ": ${typeNode.toDafny()}"}"
     }
 
     override fun clone(): LocalIdentTypeOptional {
