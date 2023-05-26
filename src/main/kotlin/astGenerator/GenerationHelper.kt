@@ -45,3 +45,13 @@ fun genDafnyExpressionFromImpliesExplies(vararg impliesExplies: ImpliesExpliesEx
 fun genHavocDafnyExpression(): DafnyExpression {
     return DafnyExpression(emptyList(), isHavoc = true)
 }
+
+fun genVarDeclWithoutRhs(st: SymbolTable, ds: DafnyStatement, log: MutableList<String>): DafnyStatement {
+    assert(ds.nonLabelStmt is VariableDeclarationStatement)
+    val decl = (ds.nonLabelStmt as VariableDeclarationStatement).clone()
+    assert(decl.lhs.size == 1)
+    decl.annotateLhsWithType(log)
+    decl.rhs = emptyList()
+    val label = ds.label
+    return DafnyStatement(label, decl)
+}

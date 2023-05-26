@@ -88,7 +88,6 @@ data class DafnyStatement(
 }
 
 data class VariableDeclarationStatement(
-    val hasGets: Boolean,
     val lhs: MutableList<LocalIdentTypeOptional>,
     var rhs: List<DafnyExpression>,
     override var stmtSymbolTable: SymbolTable? = null
@@ -96,7 +95,7 @@ data class VariableDeclarationStatement(
     override fun toDafny(): String {
         var ret = "var "
         ret += lhs.joinToString(", ") { x -> x.toDafny() }
-        if (hasGets) {
+        if (rhs.isNotEmpty()) {
             ret += " := "
             ret += rhs.joinToString(", ") { x -> x.toDafny() }
         }
@@ -106,7 +105,6 @@ data class VariableDeclarationStatement(
 
     override fun clone(): VariableDeclarationStatement {
         return VariableDeclarationStatement(
-            hasGets,
             lhs.map { it.clone() }.toMutableList(),
             rhs.map { it.clone() },
             stmtSymbolTable?.clone()

@@ -213,7 +213,6 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitVarDeclStmt(ctx: DafnyParser.VarDeclStmtContext?): VariableDeclarationStatement {
         if (ctx == null) throw Exception()
-        val hasGets = ctx.GETS() != null
         val lhs = mutableListOf<LocalIdentTypeOptional>()
         for (localIdent in ctx.localIdentTypeOptional()) {
             lhs.add(visitLocalIdentTypeOptional(localIdent))
@@ -223,7 +222,7 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
             val ex = rh.expression()
             rhsExpressions.add(visitExpression(ex))
         }
-        return VariableDeclarationStatement(hasGets, lhs, rhsExpressions)
+        return VariableDeclarationStatement(lhs, rhsExpressions)
     }
 
     override fun visitFunctionDeclaration(ctx: DafnyParser.FunctionDeclarationContext?): FunctionDeclaration {
