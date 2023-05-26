@@ -28,6 +28,14 @@ public interface IRandom {
 
   int nextInt(int bound);
 
+  /**
+   * generates a random number between lower (inclusive) and upper (inclusive)
+   * @param lower
+   * @param upper
+   * @return a randum number between lower and upper
+   */
+  int nextInt(int lower, int upper);
+
   Float nextFloat();
 
   default int nextPositiveInt(int bound) {

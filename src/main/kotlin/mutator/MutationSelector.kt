@@ -15,17 +15,42 @@ class MutationSelector(
         for (i in block.statements.indices) {
             val dafnyStmt = block.statements[i]
             if (dafnyStmt.nonLabelStmt is VariableDeclarationStatement) {
-               possibleOriginals.add(Pair(i, dafnyStmt))
+                possibleOriginals.add(Pair(i, dafnyStmt))
             }
         }
-        if (possibleOriginals.size == 0) {
+        if (possibleOriginals.isEmpty()) {
             throw UnableToFindOriginalException()
         }
         val (index, original) = possibleOriginals[rand.nextInt(possibleOriginals.size)]
         return MutationSubBlock(index, 1, listOf(original), block)
     }
-    fun selectTwoVarDeclStmt(block: BlockStatement) {
 
+    fun selectTwoVarDeclStmt(block: BlockStatement): MutationSubBlock {
+        val arity = 2
+        val possibleOriginals = mutableListOf<MutableList<Pair<Int, DafnyStatement>>>()
+        var originalsList = mutableListOf<Pair<Int, DafnyStatement>>()
+        for (i in block.statements.indices) {
+            val dafnyStatement = block.statements[i]
+            if (dafnyStatement.nonLabelStmt is VariableDeclarationStatement) {
+                originalsList.add(Pair(i, dafnyStatement))
+            } else {
+                if (originalsList.size >= arity) {
+                    possibleOriginals.add(originalsList)
+                }
+                originalsList = mutableListOf()
+            }
+        }
+
+        if (possibleOriginals.isEmpty()) {
+            throw UnableToFindOriginalException()
+        }
+
+        val selectedList = possibleOriginals[rand.nextInt(possibleOriginals.size)]
+        val startPos = rand.nextInt(0, selectedList.size - arity)
+        val selectedPairsStmts = selectedList.subList(startPos, startPos + arity)
+        val index = selectedPairsStmts[0].first
+        val statementsToMutate = selectedPairsStmts.map { it.second }
+        return MutationSubBlock(index, arity, statementsToMutate, block)
     }
 
     fun selectThreeVarDeclStmt(block: BlockStatement) {

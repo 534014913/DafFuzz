@@ -24,8 +24,8 @@ package utils;
 import java.util.Random;
 
 /**
- * Random generator that uses java.util.Random, to be used when genuine pseudo-random generation
- * is required (as opposed to mocking for testing).
+ * Random generator that uses java.util.Random, to be used when genuine pseudo-random generation is
+ * required (as opposed to mocking for testing).
  */
 public class RandomWrapper implements IRandom {
 
@@ -42,6 +42,12 @@ public class RandomWrapper implements IRandom {
   @Override
   public int nextInt(int bound) {
     return generator.nextInt(bound);
+  }
+
+
+  public int nextInt(int lower, int upper) {
+    assert (upper >= lower);
+    return generator.nextInt(upper - lower + 1) + lower;
   }
 
   @Override
