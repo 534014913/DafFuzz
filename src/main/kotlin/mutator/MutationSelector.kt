@@ -53,8 +53,32 @@ class MutationSelector(
         return MutationSubBlock(index, arity, statementsToMutate, block)
     }
 
-    fun selectThreeVarDeclStmt(block: BlockStatement) {
+    fun selectThreeVarDeclStmt(block: BlockStatement): MutationSubBlock {
+        val arity = 3
+        val possibleOriginals = mutableListOf<MutableList<Pair<Int, DafnyStatement>>>()
+        var originalsList = mutableListOf<Pair<Int, DafnyStatement>>()
+        for (i in block.statements.indices) {
+            val dafnyStatement = block.statements[i]
+            if (dafnyStatement.nonLabelStmt is VariableDeclarationStatement) {
+                originalsList.add(Pair(i, dafnyStatement))
+            } else {
+                if (originalsList.size >= arity) {
+                    possibleOriginals.add(originalsList)
+                }
+                originalsList = mutableListOf()
+            }
+        }
 
+        if (possibleOriginals.isEmpty()) {
+            throw UnableToFindOriginalException()
+        }
+
+        val selectedList = possibleOriginals[rand.nextInt(possibleOriginals.size)]
+        val startPos = rand.nextInt(0, selectedList.size - arity)
+        val selectedPairsStmts = selectedList.subList(startPos, startPos + arity)
+        val index = selectedPairsStmts[0].first
+        val statementsToMutate = selectedPairsStmts.map { it.second }
+        return MutationSubBlock(index, arity, statementsToMutate, block)
     }
 
 
