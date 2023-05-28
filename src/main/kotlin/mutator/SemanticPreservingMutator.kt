@@ -6,7 +6,6 @@ import ast.DafnyStatement
 import utils.IRandom
 
 class SemanticPreservingMutator(
-    val log: MutableList<String>,
     rand: IRandom
 ) : AbstractMutator(
     rand
@@ -15,7 +14,7 @@ class SemanticPreservingMutator(
         val dafnyClone = dafny.clone()
         val possibleLocations = findBlocks(dafnyClone)
         val mutationSelector = MutationSelector(rand)
-        val mutationHelper = MutationHelper(log, rand)
+        val mutationHelper = MutationHelper(dafnyClone.pruned, dafny.changeHistory, rand)
         val possibleSelectionFunctions = listOf(
             mutationSelector::selectOneVarDeclStmt,
             mutationSelector::selectTwoVarDeclStmt,
