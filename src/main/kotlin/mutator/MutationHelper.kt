@@ -1,9 +1,6 @@
 package mutator
 
-import ast.BlockStatement
-import ast.DafnyStatement
-import ast.ElseSubStatement
-import ast.IfStatement
+import ast.*
 import astGenerator.NaiveExprGenerator
 import astGenerator.genVarDeclWithoutRhs
 import utils.IRandom
@@ -19,7 +16,7 @@ class MutationHelper(
         val stmtsInBlock = parent.statements
         log.add("Removed ${statements[0].toDafny()}")
         stmtsInBlock.removeAt(index)
-        stmtsInBlock.add(index, mutateToIf(statements, log))
+        stmtsInBlock.add(index, wrapStmtsWithIf(statements, log))
         stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, statements[0], log))
     }
 
@@ -31,7 +28,7 @@ class MutationHelper(
             log.add("Removed ${stmt.toDafny()}")
             stmtsInBlock.removeAt(index)
         }
-        stmtsInBlock.add(index, mutateToIf(statements, log))
+        stmtsInBlock.add(index, wrapStmtsWithIf(statements, log))
         for (stmt in statements.reversed()) {
             stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, log))
         }
@@ -45,7 +42,7 @@ class MutationHelper(
             log.add("removed ${stmt.toDafny()}")
             stmtsInBlock.removeAt(index)
         }
-        stmtsInBlock.add(index, mutateToIf(statements, log))
+        stmtsInBlock.add(index, wrapStmtsWithIf(statements, log))
         for (stmt in statements.reversed()) {
             stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, log))
         }
@@ -66,7 +63,7 @@ class MutationHelper(
         assert(arity == 3 && statements.size == arity)
     }
 
-    private fun mutateToIf(
+    private fun wrapStmtsWithIf(
         statements: List<DafnyStatement>,
         log: MutableList<String>
     ): DafnyStatement {
@@ -85,5 +82,20 @@ class MutationHelper(
             ifStmt
         }
         return DafnyStatement(null, nonLabel)
+    }
+
+    private fun wrapStmtsWithFor(statements: List<DafnyStatement>, log: MutableList<String>): DafnyStatement {
+        val blockInFor = BlockStatement(statements.toMutableList(), 99)
+        var h = ""
+        for (stmt in statements) {
+            h += stmt.toDafny() + "\n"
+        }
+        h += "------->\n"
+        val isTo = rand.nextBoolean()
+        val left = if (isTo) 0 else 1
+        val right = if (isTo) 1 else 0
+        val ret = DafnyStatement(null, ForStatement(isTo, left, right,blockInFor))
+        h += ret.toDafny() + "\n"
+        return ret
     }
 }
