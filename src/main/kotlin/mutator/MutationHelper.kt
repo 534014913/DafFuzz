@@ -45,6 +45,10 @@ class MutationHelper(
             log.add("removed ${stmt.toDafny()}")
             stmtsInBlock.removeAt(index)
         }
+        stmtsInBlock.add(index, mutateToIf(statements, log))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, log))
+        }
     }
 
     fun mutateOneStmtToFor(mutBlock: MutationSubBlock) {
