@@ -51,16 +51,40 @@ class MutationHelper(
     fun mutateOneStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 1 && statements.size == arity)
+        val stmtsInBlock = parent.statements
+        for (stmt in statements) {
+            stmtsInBlock.removeAt(index)
+        }
+        stmtsInBlock.add(index, wrapStmtsWithFor(statements, log))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, log))
+        }
     }
 
     fun mutateTwoStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 2 && statements.size == arity)
+        val stmtsInBlock = parent.statements
+        for (stmt in statements) {
+            stmtsInBlock.removeAt(index)
+        }
+        stmtsInBlock.add(index, wrapStmtsWithFor(statements, log))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, log))
+        }
     }
 
     fun mutateThreeStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 3 && statements.size == arity)
+        val stmtsInBlock = parent.statements
+        for (stmt in statements) {
+            stmtsInBlock.removeAt(index)
+        }
+        stmtsInBlock.add(index, wrapStmtsWithFor(statements, log))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, log))
+        }
     }
 
     private fun wrapStmtsWithIf(
@@ -86,7 +110,7 @@ class MutationHelper(
 
     private fun wrapStmtsWithFor(statements: List<DafnyStatement>, log: MutableList<String>): DafnyStatement {
         val blockInFor = BlockStatement(statements.toMutableList(), 99)
-        var h = ""
+        var h = "Removed\n"
         for (stmt in statements) {
             h += stmt.toDafny() + "\n"
         }
@@ -96,6 +120,7 @@ class MutationHelper(
         val right = if (isTo) 1 else 0
         val ret = DafnyStatement(null, ForStatement(isTo, left, right,blockInFor))
         h += ret.toDafny() + "\n"
+        log.add(h)
         return ret
     }
 }
