@@ -33,6 +33,12 @@ class SimpleGenerator(
         return literalExprToDafnyExprWrapper(literal)
     }
 
+    fun genDafnyExpressionBoolLiteral(result: Boolean): DafnyExpression {
+        val bString = result.toString()
+        val literal = LiteralExpression(bString, BoolNode(10))
+        return literalExprToDafnyExprWrapper(literal)
+    }
+
     override fun genDafnyExpressionCharLiteral(): DafnyExpression {
         var c = (rand.nextInt(122 - 48) + 48).toChar().toString()
         if (c == "\\") {
@@ -54,6 +60,15 @@ class SimpleGenerator(
         return literalExprToDafnyExprWrapper(literal)
     }
 
+    override fun genAssertStatement(result: Boolean, st: SymbolTable): DafnyStatement {
+        val dafExpr = genDafnyExpressionBoolLiteral(result)
+        return DafnyStatement(null, AssertStatement(dafExpr))
+    }
+
+    override fun genAssumeStatement(result: Boolean, st: SymbolTable): DafnyStatement {
+        val dafExpr = genDafnyExpressionBoolLiteral(result)
+        return DafnyStatement(null, AssumeStatement(dafExpr))
+    }
     fun genDafnyExpressionBoolean(result: Boolean, st: SymbolTable) {
 
     }

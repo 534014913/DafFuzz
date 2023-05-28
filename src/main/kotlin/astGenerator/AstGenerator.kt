@@ -15,8 +15,9 @@ sealed class AstGenerator(
     abstract fun genDafnyExpressionCharLiteral(): DafnyExpression
 
     abstract fun genDafnyExpressionStringLiteral(): DafnyExpression
-    fun genAssertStatement(b: Boolean, st: SymbolTable?): DafnyStatement {
-        TODO("Not yet implemented")
-    }
+
+    abstract fun genAssertStatement(result: Boolean, st: SymbolTable): DafnyStatement
+
+    abstract fun genAssumeStatement(result: Boolean, st: SymbolTable): DafnyStatement
 
 }
