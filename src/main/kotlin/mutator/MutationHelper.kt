@@ -26,11 +26,25 @@ class MutationHelper(
     fun mutateTwoStmtToIf(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 2 && statements.size == arity)
+        val stmtsInBlock = parent.statements
+        for (stmt in statements) {
+            log.add("Removed ${stmt.toDafny()}")
+            stmtsInBlock.removeAt(index)
+        }
+        stmtsInBlock.add(index, mutateToIf(statements, log))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, log))
+        }
     }
 
     fun mutateThreeStmtToIf(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 3 && statements.size == arity)
+        val stmtsInBlock = parent.statements
+        for (stmt in statements) {
+            log.add("removed ${stmt.toDafny()}")
+            stmtsInBlock.removeAt(index)
+        }
     }
 
     fun mutateOneStmtToFor(mutBlock: MutationSubBlock) {
