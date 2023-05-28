@@ -7,10 +7,16 @@ import utils.UnableToFindTypeException
 const val INT_BOUND = 1000000000
 const val SMALL_INT_BOUND = 100
 
-class NaiveGenerator(
+class NaiveExprGenerator(
     val rand: IRandom
 ) {
-    fun GenDafnyExpression(result: Boolean, st: SymbolTable): DafnyExpression {
+    fun genDafnyExpression(result: Boolean, st: SymbolTable): DafnyExpression {
+        val simple = SimpleGenerator(rand)
+        return if (result) {
+           simple.genDafnyExpressionBoolLiteral(true)
+        } else {
+            simple.genDafnyExpressionBoolLiteral(false)
+        }
         val basicList = st.symbolMap.filter { it.value.type is BasicType }.toList()
         if (basicList.isEmpty()) {
             throw UnableToFindTypeException()
@@ -48,7 +54,26 @@ class NaiveGenerator(
         result: Boolean,
         st: SymbolTable
     ): DafnyExpression {
-        TODO("Not yet implemented")
+        val identData = data.textRepresentation!!
+        val isDataIdent = identData.contains("lift".toRegex())
+        val identAs = genAsExprWithNameSegment(ident)
+        val identDataAs = if (isDataIdent) {
+            genAsExprWithNameSegment(identData)
+        } else {
+            genAsExprWithConstant(IntNode(), identData)
+        }
+        if (result) {
+            // true
+            // ident + random int >= identDataAs
+            val randNumAs = genAsExprWithConstant(IntNode(), rand.nextInt(SMALL_INT_BOUND).toString())
+            val additionTerm = genAdditionTerm(identAs, randNumAs, BinaryOperator.ADD)
+            val rhsTerm = genTermFromAsExpression(identAs)
+            val relational = genRelationalExpressionFromTerms(additionTerm, rhsTerm, RelationalOperator.GREATEREQ)
+            TODO()
+        } else {
+            // false
+            TODO()
+        }
     }
 
     private fun genLessEqIntExpression(
@@ -66,7 +91,11 @@ class NaiveGenerator(
         result: Boolean,
         st: SymbolTable
     ): DafnyExpression {
-        TODO("Not yet implemented")
+        if (result) {
+            TODO()
+        } else {
+            TODO()
+        }
     }
 
     private fun genExplicationIntExpression(
@@ -130,8 +159,6 @@ class NaiveGenerator(
 
         return genDafnyExpressionFromImpliesExplies(lhsImpliesExplies, rhsImpliesExplies)
     }
-
-
 
 
     private fun genBoolCompatibleExpression(
