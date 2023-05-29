@@ -37,7 +37,7 @@ formals: OPENPAREN (identType (COMMA identType)*)? CLOSEPAREN;
 functionDeclaration: FUNCTION (METHOD)? methodFunctionName functionSignature functionSpec (functionBody)?;
 
 //functionSignature: (genericParameters)?formals COLON (type | OPENPAREN gIdentType CLOSEPAREN);
-functionSignature: (genericParameters)?formals COLON (type | OPENPAREN identType CLOSEPAREN);
+functionSignature: (genericParameters)? formals COLON (type | OPENPAREN identType CLOSEPAREN);
 
 genericParameters: LESS T GREATER;
 

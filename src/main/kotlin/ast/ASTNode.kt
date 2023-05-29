@@ -119,10 +119,12 @@ data class ClassMemberDeclaration(
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
-        //TODO: does not support function as function body are made of expression
+        //TODO: for functions, only the function itself is added to symbol table
         if (isMethod) {
             assert(st === walker.topST)
             method!!.walk(st, walker)
+        } else {
+            function!!.walk(st, walker)
         }
     }
 }

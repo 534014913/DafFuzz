@@ -243,7 +243,10 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
 
     override fun visitFunctionSignature(ctx: DafnyParser.FunctionSignatureContext?): FunctionSignature {
         if (ctx == null) throw Exception()
-        return FunctionSignature(ctx.text)
+        val formals = visitFormals(ctx.formals())
+        assert (ctx.type() != null)
+        val type = visitType(ctx.type())
+        return FunctionSignature(ctx.text,formals, type)
     }
 
     override fun visitFunctionSpec(ctx: DafnyParser.FunctionSpecContext?): FunctionSpecification {

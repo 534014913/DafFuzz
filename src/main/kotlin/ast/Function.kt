@@ -1,5 +1,7 @@
 package ast
 
+import walker.DafnyWalker
+
 data class FunctionDeclaration(
     val isPure: Boolean,
     val name: String,
@@ -23,18 +25,37 @@ data class FunctionDeclaration(
     override fun clone(): FunctionDeclaration {
         return FunctionDeclaration(isPure, name, functionSignature.clone(), functionSpecification.clone(), functionBody.clone())
     }
+
+    private fun getMethodType(): MethodType {
+        val (args, ret) = functionSignature.getArgRet()
+        return MethodType(args, ret)
+    }
+
+    fun walk(st: SymbolTable, walker: DafnyWalker) {
+        st[name] = IdentifierData(getMethodType(), null, null)
+    }
 }
 
 data class FunctionSignature(
-    val text: String
+    val text: String,
+    val formals: Formals,
+    val type: TypeNode
 ): CloneableASTNode {
     override fun toDafny(): String {
         return text
     }
 
     override fun clone(): FunctionSignature {
-        return FunctionSignature(text)
+        return FunctionSignature(text, formals, type)
     }
+
+    fun getArgRet(): Pair<List<TypeNode>, List<TypeNode>> {
+        val args = formals.getTypeList()
+        val ret = listOf(type)
+        return Pair(args, ret)
+    }
+
+
 }
 
 data class FunctionSpecification(
