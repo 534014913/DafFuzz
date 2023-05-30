@@ -47,7 +47,22 @@ data class PrimaryExpressionWithSuffix(
 
     fun inferType(st: SymbolTable): TypeNode {
         return if (suffix.isNotEmpty()) {
-            UndecidedType()
+            if (suffix.size == 1 && suffix[0] is ArgumentListSuffix) {
+                val name = primary.toDafny()
+                if (primary is NameSegment) {
+                    if (st[name]?.type is MethodType) {
+                        val t = st[name]!!.type as MethodType
+                        t.retType[0]
+                    } else {
+                        throw RuntimeException("name segment does not represent function Name")
+                    }
+                } else {
+                    UndecidedType("Primary expr not name segment")
+                }
+
+            } else {
+                UndecidedType("suffix but not method call")
+            }
         } else {
             primary.inferType(st)
         }
