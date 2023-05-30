@@ -51,6 +51,19 @@ class MutationHelper(
         }
     }
 
+    fun mutateArbitraryStmtToIf(mutBlock: MutationSubBlock) {
+        val (index, arity, statements, parent) = mutBlock
+        val stmtsInBlock = parent.statements
+        for (stmt in statements) {
+            pruned.add(stmt)
+            stmtsInBlock.removeAt(index)
+        }
+        stmtsInBlock.add(index, wrapStmtsWithIf(statements))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
+        }
+    }
+
     fun mutateOneStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 1 && statements.size == arity)
@@ -82,6 +95,19 @@ class MutationHelper(
     fun mutateThreeStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 3 && statements.size == arity)
+        val stmtsInBlock = parent.statements
+        for (stmt in statements) {
+            pruned.add(stmt)
+            stmtsInBlock.removeAt(index)
+        }
+        stmtsInBlock.add(index, wrapStmtsWithFor(statements))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
+        }
+    }
+
+    fun mutateArbitraryStmtToFor(mutBlock: MutationSubBlock) {
+        val (index, arity, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
         for (stmt in statements) {
             pruned.add(stmt)

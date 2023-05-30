@@ -81,6 +81,29 @@ class MutationSelector(
         return MutationSubBlock(index, arity, statementsToMutate, block)
     }
 
+    fun selectAllVarDeclStmt(block: BlockStatement): MutationSubBlock {
+        val possibleOriginals = mutableListOf<MutableList<Pair<Int, DafnyStatement>>>()
+        var originalsList = mutableListOf<Pair<Int, DafnyStatement>>()
+        for (i in block.statements.indices) {
+            val dafnyStatement = block.statements[i]
+            if (dafnyStatement.nonLabelStmt is VariableDeclarationStatement) {
+                originalsList.add(Pair(i, dafnyStatement))
+            } else {
+                if (originalsList.isNotEmpty()) {
+                    possibleOriginals.add(originalsList)
+                    originalsList = mutableListOf()
+                }
+            }
+        }
+
+        if (possibleOriginals.isEmpty()) {
+            throw UnableToFindOriginalException()
+        }
+
+        val selectedList = possibleOriginals[rand.nextInt(possibleOriginals.size)]
+        return MutationSubBlock(selectedList[0].first, selectedList.size, selectedList.map {it.second}, block)
+    }
+
 
 }
 
