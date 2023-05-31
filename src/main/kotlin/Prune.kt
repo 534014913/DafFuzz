@@ -1,4 +1,5 @@
 import ast.*
+import ast.statements.*
 
 fun addInstrumentation(dafny: Dafny) {
     for (topl in dafny.toplevels) {

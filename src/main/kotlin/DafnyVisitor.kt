@@ -1,6 +1,18 @@
 import antlr.DafnyParser
 import antlr.DafnyParserBaseVisitor
 import ast.*
+import ast.expressions.*
+import ast.function.FunctionBody
+import ast.function.FunctionDeclaration
+import ast.function.FunctionSignature
+import ast.function.FunctionSpecification
+import ast.method.MethodDeclaration
+import ast.method.MethodSignature
+import ast.method.MethodSpecification
+import ast.primaryExpressions.*
+import ast.statements.*
+import ast.suffixes.*
+import ast.types.*
 import org.antlr.v4.runtime.tree.ParseTree
 
 var ident = 1

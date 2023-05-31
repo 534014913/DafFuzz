@@ -1,7 +1,7 @@
 package walker
 
 import ast.Dafny
-import ast.SymbolTable
+import ast.symbolTable.SymbolTable
 
 class DafnyWalker(
 ) {

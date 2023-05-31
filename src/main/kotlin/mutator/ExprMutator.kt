@@ -1,8 +1,8 @@
 package mutator
 
-import ast.LogicalExpression
-import ast.RelationalExpression
-import ast.RelationalOperator
+import ast.expressions.LogicalExpression
+import ast.expressions.RelationalExpression
+import ast.expressions.RelationalOperator
 
 class ExprMutator {
 //    fun swapTerm(t: Term): Term {

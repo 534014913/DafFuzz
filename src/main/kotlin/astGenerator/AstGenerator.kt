@@ -1,8 +1,8 @@
 package astGenerator
 
-import ast.DafnyExpression
-import ast.DafnyStatement
-import ast.SymbolTable
+import ast.expressions.DafnyExpression
+import ast.statements.DafnyStatement
+import ast.symbolTable.SymbolTable
 import utils.IRandom
 
 sealed class AstGenerator(

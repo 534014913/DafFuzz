@@ -1,6 +1,15 @@
 package astGenerator
 
-import ast.*
+import ast.expressions.*
+import ast.primaryExpressions.LiteralExpression
+import ast.primaryExpressions.PrimaryExpression
+import ast.primaryExpressions.PrimaryExpressionWithSuffix
+import ast.statements.AssertStatement
+import ast.statements.AssumeStatement
+import ast.statements.DafnyStatement
+import ast.symbolTable.IdentifierData
+import ast.symbolTable.SymbolTable
+import ast.types.*
 import utils.IRandom
 
 val BooleanExpressionSelectionWeight = mapOf(

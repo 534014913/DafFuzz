@@ -1,6 +1,13 @@
 package astGenerator
 
-import ast.*
+import ast.expressions.*
+import ast.primaryExpressions.LiteralExpression
+import ast.primaryExpressions.NameSegment
+import ast.primaryExpressions.PrimaryExpressionWithSuffix
+import ast.statements.DafnyStatement
+import ast.statements.VariableDeclarationStatement
+import ast.symbolTable.SymbolTable
+import ast.types.TypeNode
 
 fun genAsExprWithConstant(type: TypeNode, constant: String): AsExpression {
     val literal = LiteralExpression(constant, type)

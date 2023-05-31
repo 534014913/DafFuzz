@@ -1,5 +1,9 @@
-package ast
+package ast.statements
 
+import ast.*
+import ast.expressions.DafnyExpression
+import ast.symbolTable.IdentifierData
+import ast.symbolTable.SymbolTable
 import astGenerator.AstGenerator
 import astGenerator.genHavocDafnyExpression
 import walker.DafnyWalker

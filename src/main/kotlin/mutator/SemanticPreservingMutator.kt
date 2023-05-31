@@ -1,8 +1,8 @@
 package mutator
 
-import ast.BlockStatement
+import ast.statements.BlockStatement
 import ast.Dafny
-import ast.DafnyStatement
+import ast.statements.DafnyStatement
 import utils.IRandom
 import utils.UnableToFindOriginalException
 

@@ -1,6 +1,6 @@
 package mutator
 
-import ast.*
+import ast.statements.*
 import astGenerator.NaiveExprGenerator
 import astGenerator.genVarDeclWithoutRhs
 import utils.IRandom

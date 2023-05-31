@@ -1,4 +1,7 @@
-package ast
+package ast.symbolTable
+
+import ast.types.TypeNode
+
 //almost identical to the design in RustSmith
 
 data class SymbolTable(

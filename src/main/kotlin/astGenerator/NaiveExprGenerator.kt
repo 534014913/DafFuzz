@@ -1,6 +1,11 @@
 package astGenerator
 
-import ast.*
+import ast.expressions.BinaryOperator
+import ast.expressions.DafnyExpression
+import ast.expressions.RelationalOperator
+import ast.symbolTable.IdentifierData
+import ast.symbolTable.SymbolTable
+import ast.types.*
 import utils.IRandom
 import utils.UnableToFindTypeException
 
@@ -17,12 +22,12 @@ class NaiveExprGenerator(
         } else {
             simple.genDafnyExpressionBoolLiteral(false)
         }
-        val basicList = st.symbolMap.filter { it.value.type is BasicType }.toList()
+        val basicList = st.symbolMap.filter { it.value.type is BasicTypeNode }.toList()
         if (basicList.isEmpty()) {
             throw UnableToFindTypeException()
         }
         val (ident, data) = basicList[rand.nextInt(basicList.size)]
-        return when (data.type as BasicType) {
+        return when (data.type as BasicTypeNode) {
             is IntNode -> genIntCompatibleExpression(ident, data, result, st)
             is CharNode -> genCharCompatibleExpression(ident, data, result, st)
             is BoolNode -> genBoolCompatibleExpression(ident, data, result, st)
@@ -48,6 +53,59 @@ class NaiveExprGenerator(
         }
     }
 
+    private fun genGreaterEqStringExpression(
+        ident: String,
+        data: IdentifierData,
+        result: Boolean,
+        st: SymbolTable
+    ): DafnyExpression {
+        TODO("Not yet implemented")
+    }
+
+    private fun genLessEqStringExpression(
+        ident: String,
+        data: IdentifierData,
+        result: Boolean,
+        st: SymbolTable
+    ): DafnyExpression {
+        TODO("Not yet implemented")
+    }
+
+    private fun genEqStringExpression(
+        ident: String,
+        data: IdentifierData,
+        result: Boolean,
+        st: SymbolTable
+    ): DafnyExpression {
+        TODO("Not yet implemented")
+    }
+
+    private fun genExplicationStringExpression(
+        ident: String,
+        data: IdentifierData,
+        result: Boolean,
+        st: SymbolTable
+    ): DafnyExpression {
+        TODO("Not yet implemented")
+    }
+
+    private fun genImplicationStringExpression(
+        ident: String,
+        data: IdentifierData,
+        result: Boolean,
+        st: SymbolTable
+    ): DafnyExpression {
+        TODO("Not yet implemented")
+    }
+
+    private fun genEquivStringExpression(
+        ident: String,
+        data: IdentifierData,
+        result: Boolean,
+        st: SymbolTable
+    ): DafnyExpression {
+        TODO("Not yet implemented")
+    }
 
 
     private fun genGreaterEqIntExpression(
