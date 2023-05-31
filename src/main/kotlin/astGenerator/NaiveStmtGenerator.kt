@@ -1,0 +1,5 @@
+package astGenerator
+
+class NaiveStmtGenerator {
+
+}

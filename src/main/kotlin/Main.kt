@@ -1,6 +1,7 @@
+
 import antlr.DafnyLexer
 import antlr.DafnyParser
-import mutator.PruneMutator
+import mutator.SemanticPreservingMutator
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import utils.IRandom
@@ -16,7 +17,7 @@ const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
 const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
 //const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
 
-const val seed = 5500
+const val seed = 523460
 val rand: IRandom = RandomWrapper(seed)
 const val MUTANT_NUM = 10
 const val TIME_LIMIT = 60
@@ -104,7 +105,7 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
 //    val st = SymbolTable(null,)
     val walker = DafnyWalker()
     walker.walkDafny(dafnyAst)
-//    val method = dafnyAst.toplevels[0].classMember.method!!
+//    val method = dafnyAst.toplevels[1].classMember.method!!
 //    for (stmt in method.blockStatement.statements) {
 //        println(stmt.stmtSymbolTable)
 ////        println(stmt.nonLabelStmt.stmtSymbolTable)
@@ -113,7 +114,7 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
 //    }
 //    println(method.blockStatement.stmtSymbolTable)
 
-//    addInstrumentation(dafnyAst) TODO: uncommnet
+    addInstrumentation(dafnyAst)
 
     val tmp = File(TMP_DIR + "t_" + file.name)
     tmp.writeText(dafnyAst.toDafny())
@@ -143,8 +144,10 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         }
     }
     val upSet = upList.toSet()
-    val pruneMutator = PruneMutator(upSet, 2, false, rand)
-    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
+//    val pruneMutator = PruneMutator(upSet, 4, false, rand)
+//    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
+    val semanticPreservingMutator = SemanticPreservingMutator(rand)
+    val mutated = semanticPreservingMutator.genMutants(dafnyAst, MUTANT_NUM)
 
 //    val pruned = prune(dafnyAst, upSet)
     var i = 1
@@ -163,10 +166,11 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         prunedFile.writeText(mutant.toDafny())
 
         val pruneResult =
-            runner.runDafny(prunedFile, File(WORKING_DIR), "/compile:1") ?: throw Exception()
+            runner.runDafny(prunedFile, File(WORKING_DIR), "/functionSyntax:3 /compile:1") ?: throw Exception()
 //    println("-----------------prune result---------------------")
-
+        println("----prune result----")
         println(pruneResult)
+        println("--------------------")
         log.appendText(pruneResult + "\n")
 
         val verifyAndError = mutableListOf<Int>()

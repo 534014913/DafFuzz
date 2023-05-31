@@ -38,15 +38,17 @@ class NaiveExprGenerator(
     ): DafnyExpression {
         val x = rand.nextInt(6)
         return when (x) {
-            0 -> genEquivIntExpression(ident, data, result, st)
-            1 -> genImplicationIntExpression(ident, data, result, st)
-            2 -> genExplicationIntExpression(ident, data, result, st)
-            3 -> genEqIntExpression(ident, data, result, st)
-            4 -> genLessEqIntExpression(ident, data, result, st)
-            5 -> genGreaterEqIntExpression(ident, data, result, st)
+            0 -> genEquivStringExpression(ident, data, result, st)
+            1 -> genImplicationStringExpression(ident, data, result, st)
+            2 -> genExplicationStringExpression(ident, data, result, st)
+            3 -> genEqStringExpression(ident, data, result, st)
+            4 -> genLessEqStringExpression(ident, data, result, st)
+            5 -> genGreaterEqStringExpression(ident, data, result, st)
             else -> throw RuntimeException("should not generate number greater than 5")
         }
     }
+
+
 
     private fun genGreaterEqIntExpression(
         ident: String,
