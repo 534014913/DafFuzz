@@ -3,8 +3,7 @@ package ast
 
 data class SymbolTable(
     val parent: SymbolTable?,
-//    val methodSymbolTable: MethodSymbolTable,
-//    val globalSymbolTable: GlobalSymbolTable,
+
     val symbolMap: MutableMap<String, IdentifierData> = mutableMapOf(),
     // var x := yi + yo
     // then dependentLhss[yi] = [x], dependentLhss[yo] = [x]
@@ -64,7 +63,6 @@ data class SymbolTable(
 
 data class IdentifierData(
     val type: TypeNode,
-//    val depth: Int,
     // if rhs is ident then the textRep is the name of the ident,
     // if rhs is literal, then the textRep is the literal
     val textRepresentation: String?,
@@ -77,35 +75,6 @@ data class IdentifierData(
 
     override fun toString(): String {
         return "idData(${type.toDafny()}, $textRepresentation, $rhsRepresentation)"
-    }
-}
-
-class MethodSymbolTable {
-    private val symbolMap = mutableMapOf<String, IdentifierData>()
-    val methods = mutableListOf<DafnyDeclaration>()
-
-    operator fun get(key: String): IdentifierData? {
-        return symbolMap[key]
-    }
-
-    operator fun set(key: String, value: IdentifierData) {
-        symbolMap[key] = value
-    }
-
-    fun addFunction(dafnyDeclaration: DafnyDeclaration) {
-        methods.add(dafnyDeclaration)
-    }
-}
-
-class GlobalSymbolTable {
-    private val symbolMap = mutableMapOf<String, IdentifierData>()
-
-    operator fun get(key: String): IdentifierData? {
-        return symbolMap[key]
-    }
-
-    operator fun set(key: String, value: IdentifierData) {
-        symbolMap[key] = value
     }
 }
 

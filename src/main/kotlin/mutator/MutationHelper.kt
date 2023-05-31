@@ -64,6 +64,30 @@ class MutationHelper(
         }
     }
 
+    fun mutateArbitraryStmtToIfHavoc(mutBlock: MutationSubBlock) {
+        val (index, arity, statements, parent) = mutBlock
+        val stmtsInBlock = parent.statements
+        for (stmt in statements) {
+           pruned.add(stmt)
+            stmtsInBlock.removeAt(index)
+        }
+        stmtsInBlock.add(index, wrapStmtsWithIFHavoc(statements))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
+        }
+    }
+
+    private fun wrapStmtsWithIFHavoc(statements: List<DafnyStatement>): DafnyStatement {
+        val thenClause = semanticPreservingMutation(statements)
+        val elseClause = ElseSubStatement(semanticPreservingMutation(statements))
+        val ifStmt = IfStatement(null, thenClause, elseClause, isHavoc = true)
+        return DafnyStatement(null, ifStmt)
+    }
+
+    private fun semanticPreservingMutation(statements: List<DafnyStatement>): BlockStatement {
+        return BlockStatement(statements.toMutableList(), 99)
+    }
+
     fun mutateOneStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 1 && statements.size == arity)

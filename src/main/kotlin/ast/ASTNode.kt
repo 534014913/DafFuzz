@@ -5,8 +5,6 @@ import walker.DafnyWalker
 sealed interface ASTNode {
     fun toDafny(): String
 
-//    fun accept(visitor: DafnyVisitor)
-
 }
 
 sealed interface WalkableNode {
@@ -16,7 +14,6 @@ sealed interface WalkableNode {
 sealed interface CloneableASTNode : ASTNode {
     fun clone(): CloneableASTNode
 
-//    fun walk(st: SymbolTable, walker: DafnyWalker)
 }
 
 sealed interface NonCloneableASTNode : ASTNode {

@@ -250,20 +250,25 @@ data class ReturnStatement(
 }
 
 data class IfStatement(
-    val guard: DafnyExpression,
+    val guard: DafnyExpression?,
     val thenClause: BlockStatement,
     val elseClause: ElseSubStatement?,
+    val isHavoc: Boolean = false,
     override var stmtSymbolTable: SymbolTable? = null
 ) : StatementNode {
     override fun toDafny(): String {
-        return "if (${guard.toDafny()}) \n${thenClause.toDafny()}\n" + (if (elseClause != null) " else \n${elseClause.toDafny()}\n" else "\n")
+        if (isHavoc) {
+            return "if * \n${thenClause.toDafny()}\n" + (if (elseClause != null) " else \n${elseClause.toDafny()}\n" else "\n")
+        }
+        return "if (${guard?.toDafny() ?: "*"}) \n${thenClause.toDafny()}\n" + (if (elseClause != null) " else \n${elseClause.toDafny()}\n" else "\n")
     }
 
     override fun clone(): IfStatement {
         return IfStatement(
-            guard.clone(),
+            guard?.clone(),
             thenClause.clone(),
             elseClause?.clone(),
+            isHavoc,
             stmtSymbolTable?.clone()
         )
     }
