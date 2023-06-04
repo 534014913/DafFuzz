@@ -12,7 +12,7 @@ data class SymbolTable(
     // then dependentLhss[yi] = [x], dependentLhss[yo] = [x]
     // TODO: Self-dependency?
     val dependentLhss: MutableMap<String, MutableSet<String>> = mutableMapOf(),
-    val visibleLabels: Set<String> = emptySet()
+    val visibleLabels: MutableSet<String> = mutableSetOf()
 ) : Iterable<SymbolTable> {
     companion object {
         lateinit var topLevelST: SymbolTable
@@ -47,7 +47,8 @@ data class SymbolTable(
         return SymbolTable(
             parent,
             symbolMap.mapValues { it.value.clone().copy(type = it.value.type.clone()) }.toMutableMap(),
-            dependentLhss.mapValues { it.value.toMutableSet() }.toMutableMap()
+            dependentLhss.mapValues { it.value.toMutableSet() }.toMutableMap(),
+            visibleLabels.toMutableSet()
         )
     }
 
@@ -55,7 +56,8 @@ data class SymbolTable(
         return SymbolTable(
             this,
             symbolMap.mapValues { it.value.clone().copy(type = it.value.type.clone()) }.toMutableMap(),
-            dependentLhss.mapValues { it.value.toMutableSet() }.toMutableMap()
+            dependentLhss.mapValues { it.value.toMutableSet() }.toMutableMap(),
+            visibleLabels.toMutableSet()
         )
     }
 
