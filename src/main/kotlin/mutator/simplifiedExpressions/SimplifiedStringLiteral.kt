@@ -1,12 +1,12 @@
 package mutator.simplifiedExpressions
 
 import ast.primaryExpressions.LiteralExpression
-import ast.types.BoolNode
+import ast.types.StringNode
 
-class SimplifiedBooleanLiteral(
-    val value: Boolean
+class SimplifiedStringLiteral(
+    val value: String
 ) : SimplifiedLiteralExpression() {
     override fun toLiteralExpression(): LiteralExpression {
-        return LiteralExpression(value.toString(), BoolNode(99))
+        return LiteralExpression(value, StringNode())
     }
 }

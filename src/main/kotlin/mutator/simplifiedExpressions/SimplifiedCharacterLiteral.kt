@@ -1,9 +1,12 @@
 package mutator.simplifiedExpressions
 
-import ast.expressions.DafnyExpression
+import ast.primaryExpressions.LiteralExpression
+import ast.types.CharNode
 
-class SimplifiedCharacterLiteral: SimplifiedLiteralExpression {
-    override fun toDafnyExpression(): DafnyExpression {
-        TODO("Not yet implemented")
+class SimplifiedCharacterLiteral(
+    val value: Char
+): SimplifiedLiteralExpression() {
+    override fun toLiteralExpression(): LiteralExpression {
+        return LiteralExpression(value.toString(), CharNode())
     }
 }

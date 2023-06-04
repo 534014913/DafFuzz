@@ -3,8 +3,13 @@ package mutator.simplifiedExpressions
 import ast.expressions.DafnyExpression
 
 
-class SimplifiedEquivalenceExpression: SimplifiedExpression {
+class SimplifiedEquivalenceExpression(
+    val expressions: List<SimplifiedExpression>,
+    val truthValue: Boolean?
+): SimplifiedExpression {
     override fun toDafnyExpression(): DafnyExpression {
-        TODO("Not yet implemented")
+        assert(expressions.size > 1)
+        return DafnyExpression(expressions.map { it.toImpliesExpliesExpression() })
     }
+
 }
