@@ -8,7 +8,8 @@ import ast.expressions.LogicalOperator
 class SimplifiedLogicalExpression(
     val exprLhs: SimplifiedExpression,
     val op: LogicalOperator,
-    val exprRhs: SimplifiedExpression
+    val exprRhs: SimplifiedExpression,
+    var truthValue: Boolean?
 ) : SimplifiedExpression {
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(listOf(toImpliesExpliesExpression()))
@@ -32,6 +33,24 @@ class SimplifiedLogicalExpression(
             listOf(exprRhs.toRelationalExpression()),
             hasMoreRelational = true
         )
+    }
+
+    override fun isBooleanExpression(): Boolean {
+        return true
+    }
+
+    override fun getTruthValue(): Boolean? {
+        if (truthValue == null) {
+            if (op == LogicalOperator.AND_OP) {
+                truthValue = exprLhs.getTruthValue()!! && exprRhs.getTruthValue()!!
+            }
+        }
+        return truthValue
+    }
+
+    override fun getCanonicalForm(): String {
+        getTruthValue()
+        return true.toString()
     }
 
 

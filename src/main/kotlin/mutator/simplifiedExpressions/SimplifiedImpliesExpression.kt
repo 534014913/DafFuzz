@@ -5,29 +5,48 @@ import ast.expressions.ImpliesExpliesExpression
 import ast.expressions.ImpliesExpression
 
 class SimplifiedImpliesExpression(
-    val logicalExpressions: List<SimplifiedExpression>
+    val lhsLogical: SimplifiedExpression,
+    val rhsLogical: SimplifiedExpression,
+    var truthValue: Boolean?
 ):SimplifiedImpliesExpliesExpression {
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(listOf(toImpliesExpliesExpression()))
     }
 
     override fun toImpliesExpliesExpression(): ImpliesExpliesExpression {
-        assert(logicalExpressions.size > 1)
         return ImpliesExpliesExpression(
-            logical = logicalExpressions[0].toLogicalExpression(),
-            isSimplest = logicalExpressions.size == 1,
+            logical = lhsLogical.toLogicalExpression(),
+            isSimplest = false,
             isImplies = true,
-            implies = toImplies(logicalExpressions.subList(1, logicalExpressions.size)),
+            implies = ImpliesExpression(rhsLogical.toLogicalExpression(), false, null),
             explies = emptyList()
         )
     }
 
-    private fun toImplies(logicalExpressions: List<SimplifiedExpression>): ImpliesExpression {
-        assert(logicalExpressions.isNotEmpty())
-        return if (logicalExpressions.size == 1) {
-            ImpliesExpression(logicalExpressions[0].toLogicalExpression(), false, null)
-        } else {
-            ImpliesExpression(logicalExpressions[0].toLogicalExpression(), true, toImplies(logicalExpressions.subList(1, logicalExpressions.size)))
-        }
+    override fun isBooleanExpression(): Boolean {
+        return true
     }
+
+    override fun getTruthValue(): Boolean {
+        if (truthValue == null) {
+            truthValue =
+                !(lhsLogical.getTruthValue() == true && rhsLogical.getTruthValue() == false)
+        }
+        return truthValue!!
+    }
+
+    override fun getCanonicalForm(): String {
+        getTruthValue()
+        assert(truthValue != null)
+        return truthValue.toString()
+    }
+
+//    private fun toImplies(logicalExpressions: List<SimplifiedExpression>): ImpliesExpression {
+//        assert(logicalExpressions.isNotEmpty())
+//        return if (logicalExpressions.size == 1) {
+//            ImpliesExpression(logicalExpressions[0].toLogicalExpression(), false, null)
+//        } else {
+//            ImpliesExpression(logicalExpressions[0].toLogicalExpression(), true, toImplies(logicalExpressions.subList(1, logicalExpressions.size)))
+//        }
+//    }
 }

@@ -23,4 +23,10 @@ interface SimplifiedExpression {
     fun toLiteralExpression(): LiteralExpression =
         throw IncompatibleClassChangeError("Can't change to Relational")
 
+    fun isBooleanExpression(): Boolean
+
+    fun getTruthValue(): Boolean?
+
+    fun getCanonicalForm(): String
+
 }

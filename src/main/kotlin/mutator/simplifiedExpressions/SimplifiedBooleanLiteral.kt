@@ -9,4 +9,16 @@ class SimplifiedBooleanLiteral(
     override fun toLiteralExpression(): LiteralExpression {
         return LiteralExpression(value.toString(), BoolNode(99))
     }
+
+    override fun isBooleanExpression(): Boolean {
+        return true
+    }
+
+    override fun getTruthValue(): Boolean? {
+        return value
+    }
+
+    override fun getCanonicalForm(): String {
+        return value.toString()
+    }
 }

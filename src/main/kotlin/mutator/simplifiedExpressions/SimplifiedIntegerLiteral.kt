@@ -1,13 +1,14 @@
 package mutator.simplifiedExpressions
 
 import ast.primaryExpressions.LiteralExpression
-import ast.types.CharNode
+import ast.types.IntNode
+import java.math.BigInteger
 
-class SimplifiedCharacterLiteral(
-    val value: Char
+class SimplifiedIntegerLiteral(
+    val value: BigInteger
 ): SimplifiedLiteralExpression() {
     override fun toLiteralExpression(): LiteralExpression {
-        return LiteralExpression(value.toString(), CharNode())
+        return LiteralExpression(value.toString(), IntNode())
     }
 
     override fun isBooleanExpression(): Boolean {

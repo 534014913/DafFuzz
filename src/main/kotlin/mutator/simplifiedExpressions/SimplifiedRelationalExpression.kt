@@ -5,7 +5,8 @@ import ast.expressions.*
 class SimplifiedRelationalExpression(
     val exprLhs: Term,
     val op: RelationalOperator,
-    val exprRhs: Term
+    val exprRhs: Term,
+    val truthValue: Boolean?
     ): SimplifiedExpression {
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(
@@ -40,5 +41,19 @@ class SimplifiedRelationalExpression(
             listOf(op),
             listOf(exprRhs.toTerm())
         )
+    }
+
+    override fun isBooleanExpression(): Boolean {
+        return true
+    }
+
+    override fun getTruthValue(): Boolean? {
+        assert(isBooleanExpression())
+        return truthValue
+    }
+
+    override fun getCanonicalForm(): String {
+        assert(truthValue != null)
+        return truthValue.toString()
     }
 }
