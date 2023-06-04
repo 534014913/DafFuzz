@@ -1,4 +1,0 @@
-package astGenerator
-
-class Context {
-}
