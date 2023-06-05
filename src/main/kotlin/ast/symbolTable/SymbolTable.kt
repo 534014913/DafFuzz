@@ -1,8 +1,7 @@
 package ast.symbolTable
 
-import ast.types.TypeNode
-
-//almost identical to the design in RustSmith
+import ast.types.*
+import kotlin.reflect.KClass
 
 data class SymbolTable(
     val parent: SymbolTable?,
@@ -17,6 +16,7 @@ data class SymbolTable(
     companion object {
         lateinit var topLevelST: SymbolTable
     }
+
     override fun iterator() = SymbolTableIterator(this)
 
     operator fun get(key: String): IdentifierData? {
@@ -43,10 +43,35 @@ data class SymbolTable(
         return currentVariables
     }
 
+    fun getVariablesOfType(typeClass: KClass<out TypeNode>): List<Pair<String, String>> {
+        return when (typeClass) {
+            IntNode::class -> symbolMap.toList().filter { it.second.type is IntNode }
+                .filter { it.second.textRepresentation != null }
+                .filter { !it.second.textRepresentation!!.startsWith("lift") }
+                .map { it.first to it.second.textRepresentation!! }
+            CharNode::class -> symbolMap.toList().filter { it.second.type is CharNode }
+                .filter { it.second.textRepresentation != null }
+                .filter { !it.second.textRepresentation!!.startsWith("lift") }
+                .map { it.first to it.second.textRepresentation!! }
+            BoolNode::class -> symbolMap.toList().filter { it.second.type is BoolNode }
+                .filter { it.second.textRepresentation != null }
+                .filter { !it.second.textRepresentation!!.startsWith("lift") }
+                .map { it.first to it.second.textRepresentation!! }
+            StringNode::class -> symbolMap.toList().filter { it.second.type is StringNode }
+                .filter { it.second.textRepresentation != null }
+                .filter { !it.second.textRepresentation!!.startsWith("lift") }
+                .map { it.first to it.second.textRepresentation!! }
+
+            else -> throw RuntimeException()
+        }
+
+    }
+
     fun clone(): SymbolTable {
         return SymbolTable(
             parent,
-            symbolMap.mapValues { it.value.clone().copy(type = it.value.type.clone()) }.toMutableMap(),
+            symbolMap.mapValues { it.value.clone().copy(type = it.value.type.clone()) }
+                .toMutableMap(),
             dependentLhss.mapValues { it.value.toMutableSet() }.toMutableMap(),
             visibleLabels.toMutableSet()
         )
@@ -55,7 +80,8 @@ data class SymbolTable(
     fun spawn(): SymbolTable {
         return SymbolTable(
             this,
-            symbolMap.mapValues { it.value.clone().copy(type = it.value.type.clone()) }.toMutableMap(),
+            symbolMap.mapValues { it.value.clone().copy(type = it.value.type.clone()) }
+                .toMutableMap(),
             dependentLhss.mapValues { it.value.toMutableSet() }.toMutableMap(),
             visibleLabels.toMutableSet()
         )

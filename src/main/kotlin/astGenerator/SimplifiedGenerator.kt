@@ -112,10 +112,14 @@
 
 package astGenerator
 
+import ast.expressions.BinaryOperator
+import ast.expressions.LogicalOperator
+import ast.expressions.RelationalOperator
 import ast.symbolTable.SymbolTable
 import ast.types.*
 import mutator.simplifiedExpressions.*
 import utils.IRandom
+import java.math.BigInteger
 import kotlin.reflect.KClass
 
 val PROB_EXPR_MAP: MutableMap<KClass<out SimplifiedExpression>, Int> = mutableMapOf(
@@ -124,14 +128,22 @@ val PROB_EXPR_MAP: MutableMap<KClass<out SimplifiedExpression>, Int> = mutableMa
     SimplifiedExpliesExpression::class to 10,
     SimplifiedLogicalExpression::class to 10,
     SimplifiedRelationalExpression::class to 10,
-    SimplifiedTerm::class to 10,
     SimplifiedLiteralExpression::class to 10
 )
 
 val PROB_TYPE_MAP: MutableMap<KClass<out TypeNode>, Int> = mutableMapOf(
+    BoolNode::class to 10,
     IntNode::class to 10,
     CharNode::class to 10,
     StringNode::class to 10
+)
+
+val PROB_OPERATOR_MAP: MutableMap<BinaryOperator, Int> = mutableMapOf(
+    BinaryOperator.ADD to 10,
+    BinaryOperator.SUB to 10,
+    BinaryOperator.DIV to 10,
+    BinaryOperator.MUL to 10,
+    BinaryOperator.MOD to 10
 )
 
 const val MAX_STRING_SIZE = 100
@@ -164,12 +176,11 @@ class SimplifiedGenerator(
                 st
             )
 
-            SimplifiedRelationalExpression::class -> generateSimplifiedRalationalExpression(
+            SimplifiedRelationalExpression::class -> generateSimplifiedRelationalExpression(
                 truthValue,
                 st
             )
 
-            SimplifiedTerm::class -> generateSimplifiedTerm(truthValue, st)
             SimplifiedLiteralExpression::class -> generateSimplifiedLiteralExpression(
                 truthValue,
                 BoolNode::class,
@@ -184,43 +195,431 @@ class SimplifiedGenerator(
         truthValue: Boolean,
         st: SymbolTable
     ): SimplifiedExpression {
-        TODO("Not yet implemented")
+        val trueImplies = generateSimplifiedImpliesExpression(true, st)
+        val trueExplies = generateSimplifiedExpliesExpression(true, st)
+        val falseImplies = generateSimplifiedImpliesExpression(false, st)
+        val falseExplies = generateSimplifiedExpliesExpression(false, st)
+        return if (truthValue) {
+            val map = mapOf(
+                SimplifiedEquivalenceExpression(trueImplies, trueImplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(trueImplies, trueExplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(trueExplies, trueImplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(trueExplies, trueExplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(falseImplies, falseImplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(falseImplies, falseExplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(falseExplies, falseImplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(falseExplies, falseExplies, truthValue) to 10,
+            )
+            selectRandomByWeightHelper(map)
+        } else {
+            val map = mapOf(
+                SimplifiedEquivalenceExpression(trueImplies, falseExplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(trueImplies, falseImplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(trueExplies, falseExplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(trueExplies, falseImplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(falseImplies, trueExplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(falseImplies, trueImplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(falseExplies, trueExplies, truthValue) to 10,
+                SimplifiedEquivalenceExpression(falseExplies, trueImplies, truthValue) to 10,
+            )
+            selectRandomByWeightHelper(map)
+        }
     }
 
     private fun generateSimplifiedImpliesExpression(
         truthValue: Boolean,
         st: SymbolTable
     ): SimplifiedExpression {
-        TODO("Not yet implemented")
+        val trueExprOne = generateSimplifiedLogicalExpression(true, st)
+        val trueExprTwo = generateSimplifiedLogicalExpression(true, st)
+        val falseExprOne = generateSimplifiedLogicalExpression(false, st)
+        val falseExprTwo = generateSimplifiedLogicalExpression(false, st)
+        return if (truthValue) {
+            // T ==> T, F ==> T, F ==> F
+            val map: Map<SimplifiedImpliesExpression, Int> = mapOf(
+                SimplifiedImpliesExpression(trueExprOne, trueExprTwo, truthValue) to 10,
+                SimplifiedImpliesExpression(falseExprOne, trueExprOne, truthValue) to 10,
+                SimplifiedImpliesExpression(falseExprOne, trueExprTwo, truthValue) to 10
+            )
+            selectRandomByWeightHelper(map)
+        } else {
+            // T ==> F
+            SimplifiedImpliesExpression(trueExprOne, falseExprOne, truthValue)
+        }
     }
 
     private fun generateSimplifiedExpliesExpression(
         truthValue: Boolean,
         st: SymbolTable
     ): SimplifiedExpression {
-        TODO("Not yet implemented")
+        val trueExprOne = generateSimplifiedLogicalExpression(true, st)
+        val trueExprTwo = generateSimplifiedLogicalExpression(true, st)
+        val falseExprOne = generateSimplifiedLogicalExpression(false, st)
+        val falseExprTwo = generateSimplifiedLogicalExpression(false, st)
+        return if (truthValue) {
+            // T <== T, F <== T, F <== F
+            val map: Map<SimplifiedExpliesExpression, Int> = mapOf(
+                SimplifiedExpliesExpression(
+                    trueExprOne as SimplifiedLogicalExpression,
+                    trueExprTwo as SimplifiedLogicalExpression,
+                    truthValue
+                ) to 10,
+                SimplifiedExpliesExpression(
+                    falseExprOne as SimplifiedLogicalExpression,
+                    trueExprOne as SimplifiedLogicalExpression,
+                    truthValue
+                ) to 10,
+                SimplifiedExpliesExpression(
+                    falseExprOne as SimplifiedLogicalExpression,
+                    falseExprTwo as SimplifiedLogicalExpression,
+                    truthValue
+                ) to 10
+            )
+            selectRandomByWeightHelper(map)
+        } else {
+            // F <== T
+            SimplifiedExpliesExpression(
+                falseExprOne as SimplifiedLogicalExpression,
+                trueExprOne as SimplifiedLogicalExpression,
+                truthValue
+            )
+        }
     }
 
     private fun generateSimplifiedLogicalExpression(
         truthValue: Boolean,
         st: SymbolTable
     ): SimplifiedExpression {
-        TODO("Not yet implemented")
+        val trueExprOne = generateSimplifiedRelationalExpression(true, st)
+        val trueExprTwo = generateSimplifiedRelationalExpression(true, st)
+        val falseExprOne = generateSimplifiedRelationalExpression(false, st)
+        val falseExprTwo = generateSimplifiedRelationalExpression(false, st)
+        return if (truthValue) {
+            // T || F or F || T or T || T or T && T
+            val map: Map<SimplifiedLogicalExpression, Int> = mapOf(
+                SimplifiedLogicalExpression(
+                    trueExprOne,
+                    LogicalOperator.OR_OP,
+                    falseExprOne,
+                    truthValue
+                ) to 10,
+                SimplifiedLogicalExpression(
+                    falseExprOne,
+                    LogicalOperator.OR_OP,
+                    trueExprOne,
+                    truthValue
+                ) to 10,
+                SimplifiedLogicalExpression(
+                    trueExprOne,
+                    LogicalOperator.OR_OP,
+                    trueExprTwo,
+                    truthValue
+                ) to 10,
+                SimplifiedLogicalExpression(
+                    trueExprOne,
+                    LogicalOperator.AND_OP,
+                    trueExprTwo,
+                    truthValue
+                ) to 10
+            )
+            selectRandomByWeightHelper(map)
+        } else {
+            // T && F, F && T, F && F, F || F
+            val map: Map<SimplifiedLogicalExpression, Int> = mapOf(
+                SimplifiedLogicalExpression(
+                    trueExprOne,
+                    LogicalOperator.AND_OP,
+                    falseExprOne,
+                    truthValue
+                ) to 10,
+                SimplifiedLogicalExpression(
+                    falseExprOne,
+                    LogicalOperator.AND_OP,
+                    trueExprOne,
+                    truthValue
+                ) to 10,
+                SimplifiedLogicalExpression(
+                    falseExprOne,
+                    LogicalOperator.AND_OP,
+                    falseExprTwo,
+                    truthValue
+                ) to 10,
+                SimplifiedLogicalExpression(
+                    falseExprTwo,
+                    LogicalOperator.OR_OP,
+                    falseExprOne,
+                    truthValue
+                ) to 10,
+            )
+            selectRandomByWeightHelper(map)
+        }
     }
 
-    private fun generateSimplifiedRalationalExpression(
+    private fun generateSimplifiedRelationalExpression(
         truthValue: Boolean,
         st: SymbolTable
     ): SimplifiedExpression {
-        TODO("Not yet implemented")
+        val relationalOpWeightMap: Map<RelationalOperator, Int> = mutableMapOf(
+            RelationalOperator.EQ to 10,
+            RelationalOperator.NOTEQ to 10,
+            RelationalOperator.LESS to 10,
+            RelationalOperator.LESSEQ to 10,
+            RelationalOperator.GREATER to 10,
+            RelationalOperator.GREATEREQ to 10,
+        )
+        val relOp = selectRandomByWeightHelper(relationalOpWeightMap)
+        return when (relOp) {
+            RelationalOperator.EQ -> generateSimplifiedRelationalEqExpression(truthValue, st)
+            RelationalOperator.NOTEQ -> generateSimplifiedRelationalNotEqExpression(truthValue, st)
+            RelationalOperator.LESS -> generateSimplifiedRelationalLessExpression(truthValue, st)
+            RelationalOperator.LESSEQ -> generateSimplifiedRelationalLessEqExpression(
+                truthValue,
+                st
+            )
+
+            RelationalOperator.GREATER -> generateSimplifiedRelationalGreaterExpression(
+                truthValue,
+                st
+            )
+
+            RelationalOperator.GREATEREQ -> generateSimplifiedRelationalGreaterEqExpression(
+                truthValue,
+                st
+            )
+
+            else -> throw RuntimeException("${relOp.toDafny()} should not exist")
+        }
     }
 
-    private fun generateSimplifiedTerm(truthValue: Boolean, st: SymbolTable): SimplifiedExpression {
-        TODO("Not yet implemented")
+    private fun generateSimplifiedRelationalLessEqExpression(
+        truthValue: Boolean,
+        st: SymbolTable
+    ): SimplifiedExpression {
+        var lhs = generateIntTerm(st)
+        var rhs = generateIntTerm(st)
+
+        val bigLhs = BigInteger(lhs.getCanonicalForm())
+        val bigRhs = BigInteger(rhs.getCanonicalForm())
+        assert(bigLhs != bigRhs)
+        if (bigLhs > bigRhs) {
+            val t = lhs
+            lhs = rhs
+            rhs = t
+        }
+        return if (truthValue) {
+            SimplifiedRelationalExpression(
+                lhs.toTerm(),
+                RelationalOperator.LESSEQ,
+                rhs.toTerm(),
+                true
+            )
+        } else {
+            SimplifiedRelationalExpression(
+                rhs.toTerm(),
+                RelationalOperator.LESSEQ,
+                lhs.toTerm(),
+                false
+            )
+        }
     }
 
-    fun generateSimplifiedTerms(truthValue: Boolean, st: SymbolTable) {
-        TODO("Not Implemented Yet")
+    private fun generateSimplifiedRelationalGreaterEqExpression(
+        truthValue: Boolean,
+        st: SymbolTable
+    ): SimplifiedExpression {
+        var lhs = generateIntTerm(st)
+        var rhs = generateIntTerm(st)
+
+        val bigLhs = BigInteger(lhs.getCanonicalForm())
+        val bigRhs = BigInteger(rhs.getCanonicalForm())
+        assert(bigLhs != bigRhs)
+        if (bigLhs < bigRhs) {
+            val t = lhs
+            lhs = rhs
+            rhs = t
+        }
+        return if (truthValue) {
+            SimplifiedRelationalExpression(
+                lhs.toTerm(),
+                RelationalOperator.GREATEREQ,
+                rhs.toTerm(),
+                true
+            )
+        } else {
+            SimplifiedRelationalExpression(
+                rhs.toTerm(),
+                RelationalOperator.GREATEREQ,
+                lhs.toTerm(),
+                false
+            )
+        }
+    }
+
+    private fun generateSimplifiedRelationalGreaterExpression(
+        truthValue: Boolean,
+        st: SymbolTable
+    ): SimplifiedExpression {
+        var lhs = generateIntTerm(st)
+        var rhs = generateIntTerm(st)
+        while (rhs.getCanonicalForm() == lhs.getCanonicalForm()) {
+            rhs = generateIntTerm(st)
+        }
+
+        val bigLhs = BigInteger(lhs.getCanonicalForm())
+        val bigRhs = BigInteger(rhs.getCanonicalForm())
+        assert(bigLhs != bigRhs)
+        if (bigLhs < bigRhs) {
+            val t = lhs
+            lhs = rhs
+            rhs = t
+        }
+        return if (truthValue) {
+            SimplifiedRelationalExpression(
+                lhs.toTerm(),
+                RelationalOperator.GREATER,
+                rhs.toTerm(),
+                true
+            )
+        } else {
+            SimplifiedRelationalExpression(
+                rhs.toTerm(),
+                RelationalOperator.GREATER,
+                lhs.toTerm(),
+                false
+            )
+        }
+    }
+
+    private fun generateSimplifiedRelationalLessExpression(
+        truthValue: Boolean,
+        st: SymbolTable
+    ): SimplifiedExpression {
+        var lhs = generateIntTerm(st)
+        var rhs = generateIntTerm(st)
+        while (rhs.getCanonicalForm() == lhs.getCanonicalForm()) {
+            rhs = generateIntTerm(st)
+        }
+
+        val bigLhs = BigInteger(lhs.getCanonicalForm())
+        val bigRhs = BigInteger(rhs.getCanonicalForm())
+        assert(bigLhs != bigRhs)
+        if (bigLhs > bigRhs) {
+            val t = lhs
+            lhs = rhs
+            rhs = t
+        }
+        assert(BigInteger(lhs.getCanonicalForm()) < BigInteger(rhs.getCanonicalForm()))
+        return if (truthValue) {
+            SimplifiedRelationalExpression(
+                lhs.toTerm(),
+                RelationalOperator.LESS,
+                rhs.toTerm(),
+                true
+            )
+        } else {
+            SimplifiedRelationalExpression(
+                rhs.toTerm(),
+                RelationalOperator.LESS,
+                lhs.toTerm(),
+                false
+            )
+        }
+    }
+
+    private fun generateSimplifiedRelationalNotEqExpression(
+        truthValue: Boolean,
+        st: SymbolTable
+    ): SimplifiedExpression {
+        val type = selectRandomTypeByWeight()
+        val lhs = generateSimplifiedTerm(type, st)
+        return if (!truthValue) {
+            SimplifiedRelationalExpression(
+                lhs.toTerm(),
+                RelationalOperator.NOTEQ,
+                lhs.toTerm(),
+                false
+            )
+        } else {
+            var rhs = generateSimplifiedTerm(type, st)
+            while (lhs.getCanonicalForm() == rhs.getCanonicalForm()) {
+                rhs = generateSimplifiedTerm(type, st)
+            }
+            SimplifiedRelationalExpression(
+                lhs.toTerm(),
+                RelationalOperator.NOTEQ,
+                rhs.toTerm(),
+                true
+            )
+        }
+    }
+
+    private fun generateSimplifiedRelationalEqExpression(
+        truthValue: Boolean,
+        st: SymbolTable
+    ): SimplifiedExpression {
+        val type = selectRandomTypeByWeight()
+        val lhs = generateSimplifiedTerm(type, st)
+        return if (truthValue) {
+            SimplifiedRelationalExpression(
+                lhs.toTerm(),
+                RelationalOperator.EQ,
+                lhs.toTerm(),
+                truthValue
+            )
+        } else {
+            var rhs = generateSimplifiedTerm(type, st)
+            while (lhs.getCanonicalForm() == rhs.getCanonicalForm()) {
+                rhs = generateSimplifiedTerm(type, st)
+            }
+            SimplifiedRelationalExpression(
+                lhs.toTerm(),
+                RelationalOperator.EQ,
+                rhs.toTerm(),
+                truthValue
+            )
+        }
+    }
+
+    private fun generateSimplifiedTerm(
+        type: KClass<out TypeNode>,
+        st: SymbolTable
+    ): SimplifiedExpression {
+        return when (type) {
+            IntNode::class ->
+                SimplifiedTerm(
+                    generateIntTerm(st),
+                    selectRandomByWeightHelper(PROB_OPERATOR_MAP),
+                    generateIntTerm(st)
+                )
+
+            CharNode::class -> generateSimplifiedLiteralExpression(
+                random.nextBoolean(),
+                CharNode::class,
+                st
+            )
+
+            StringNode::class -> generateSimplifiedLiteralExpression(
+                random.nextBoolean(),
+                StringNode::class,
+                st
+            )
+
+            BoolNode::class -> generateSimplifiedLiteralExpression(
+                random.nextBoolean(),
+                BoolNode::class,
+                st
+            )
+
+            else -> throw RuntimeException("$type does not have generator")
+        }
+    }
+
+    private fun generateIntTerm(st: SymbolTable): SimplifiedExpression {
+        return if (random.nextFloat() > 0.7) {
+            generateSimplifiedLiteralExpression(random.nextBoolean(), IntNode::class, st)
+        } else {
+            generateSimplifiedTerm(IntNode::class, st)
+        }
     }
 
     fun generateSimplifiedLiteralExpression(
@@ -228,12 +627,44 @@ class SimplifiedGenerator(
         type: KClass<out TypeNode>,
         st: SymbolTable
     ): SimplifiedExpression {
+        val varList = st.getVariablesOfType(type)
+        if (type == BoolNode::class) {
+            varList.filter { it.second == truthValue.toString() }
+        }
+        if (varList.isNotEmpty()) {
+            val (ident, value) = varList[random.nextInt(varList.size)]
+            val typeNode = when (type) {
+                BoolNode::class -> BoolNode(99)
+                CharNode::class -> CharNode()
+                IntNode::class -> IntNode()
+                StringNode::class -> StringNode()
+                else -> throw RuntimeException()
+            }
+            return generateSimplifiedNameSegment(ident, value, typeNode)
+        }
         return when (type) {
             BoolNode::class -> generateBooleanLiteral(truthValue)
             CharNode::class -> generateCharacterLiteral()
             StringNode::class -> generateStringLiteral()
+            IntNode::class -> generateIntegerLiteral()
             else -> throw RuntimeException("$type does not have a generator")
         }
+    }
+
+    private fun generateSimplifiedNameSegment(
+        ident: String,
+        value: String,
+        type: TypeNode
+    ): SimplifiedExpression {
+        return SimplifiedNameSegment(ident, value, type)
+    }
+
+    private fun generateIntegerLiteral(value: BigInteger): SimplifiedExpression {
+        return SimplifiedIntegerLiteral(value)
+    }
+
+    private fun generateIntegerLiteral(): SimplifiedExpression {
+        return SimplifiedIntegerLiteral(BigInteger(random.nextInt(10000000).toString()))
     }
 
     private fun generateBooleanLiteral(truthValue: Boolean): SimplifiedExpression {
@@ -245,6 +676,10 @@ class SimplifiedGenerator(
         return SimplifiedCharacterLiteral(charPool[random.nextInt(charPool.size)])
     }
 
+    private fun generateSimplifiedCharLiteral(value: Char): SimplifiedExpression {
+        return SimplifiedCharacterLiteral(value)
+    }
+
     private fun generateStringLiteral(): SimplifiedExpression {
         val charPool = ('a'..'z') + ('A'..'Z') + ('0'..'9')
         var s = ""
@@ -252,6 +687,10 @@ class SimplifiedGenerator(
             s += charPool[random.nextInt(charPool.size)]
         }
         return SimplifiedStringLiteral(s)
+    }
+
+    private fun generateStringLiteral(value: String): SimplifiedExpression {
+        return SimplifiedStringLiteral(value)
     }
 
 
