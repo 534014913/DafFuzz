@@ -65,6 +65,10 @@ data class VariableDeclarationStatement(
     }
 
     fun annotateLhsWithType(history: MutableList<String>) {
+        if (rhs.isEmpty()) {
+            // already a pure declaration statement;
+            return
+        }
         if (lhs.size == 1) {
             val r = rhs[0]
             val l = lhs[0]
