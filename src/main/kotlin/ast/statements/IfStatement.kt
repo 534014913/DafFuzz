@@ -34,5 +34,14 @@ data class IfStatement(
         val st2 = st.spawn()
         thenClause.walk(st1, walker)
         elseClause?.walk(st2, walker)
+        if (isHavoc) {
+            st.merge(st1)
+        } else if (guard?.truthValue != null) {
+            if (guard.truthValue) {
+                st.merge(st1)
+            } else {
+                st.merge(st2)
+            }
+        }
     }
 }

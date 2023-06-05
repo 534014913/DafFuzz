@@ -14,7 +14,8 @@ class SemanticPreservingMutator(
     rand
 ) {
     override fun mutateDafny(dafny: Dafny): Dafny {
-        val dafnyClone = dafny.clone()
+//        val dafnyClone = dafny.clone()
+        val dafnyClone = dafny
         val possibleLocations = findBlocks(dafnyClone)
 //        for (location in possibleLocations) {
 //            println("--------------LOCATION---------------")

@@ -12,7 +12,7 @@ class SimplifiedStringLiteral(
     }
 
     override fun toLiteralExpression(): LiteralExpression {
-        return LiteralExpression(value, StringNode())
+        return LiteralExpression("\"$value\"", StringNode())
     }
 
     override fun isBooleanExpression(): Boolean {

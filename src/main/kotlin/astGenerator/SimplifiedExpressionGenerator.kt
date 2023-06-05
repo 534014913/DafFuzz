@@ -149,7 +149,7 @@ val PROB_OPERATOR_MAP: MutableMap<BinaryOperator, Int> = mutableMapOf(
 
 const val MAX_STRING_SIZE = 100
 
-const val MAX_INT_TERM_DEPTH = 10
+const val MAX_INT_TERM_DEPTH = 3
 var currentIntDepth = 0
 
 class SimplifiedExpressionGenerator(

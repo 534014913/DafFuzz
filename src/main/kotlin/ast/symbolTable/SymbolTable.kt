@@ -87,6 +87,10 @@ data class SymbolTable(
         )
     }
 
+    fun merge(st: SymbolTable) {
+        symbolMap.putAll(st.symbolMap)
+    }
+
     override fun toString(): String {
         return symbolMap.toString()
     }

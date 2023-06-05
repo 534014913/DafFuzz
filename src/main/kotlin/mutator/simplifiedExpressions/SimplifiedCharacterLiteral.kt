@@ -11,7 +11,7 @@ class SimplifiedCharacterLiteral(
         return DafnyExpression(listOf(toImpliesExpliesExpression()), null)
     }
     override fun toLiteralExpression(): LiteralExpression {
-        return LiteralExpression(value.toString(), CharNode())
+        return LiteralExpression("'$value'", CharNode())
     }
 
     override fun isBooleanExpression(): Boolean {
