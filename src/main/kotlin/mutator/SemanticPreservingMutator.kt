@@ -30,8 +30,8 @@ class SemanticPreservingMutator(
         )
         val location = possibleLocations[rand.nextInt(possibleLocations.size)]
         try {
-            println("-------------location---------------")
-            println(location.toDafny())
+//            println("-------------location---------------")
+//            println(location.toDafny())
             val randIndex = rand.nextInt(possibleSelectionFunctions.size)
             val selectionFunction =
                 possibleSelectionFunctions[randIndex]

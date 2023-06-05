@@ -16,7 +16,8 @@ class PruneMutator(
     rand: IRandom
 ) : AbstractMutator(mutationRepetition, rand) {
     override fun mutateDafny(dafny: Dafny): Dafny {
-        val dafnyClone = dafny.clone()
+//        val dafnyClone = dafny.clone()
+        val dafnyClone = dafny
 //        println("----------symbol table null before clone?-----------")
 //        for (toplevel in dafny.toplevels) {
 //            if (toplevel.classMember.isMethod) {

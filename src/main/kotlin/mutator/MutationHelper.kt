@@ -3,6 +3,7 @@ package mutator
 import ast.statements.*
 import astGenerator.SimplifiedExpressionGenerator
 import astGenerator.genVarDeclWithoutRhs
+import mutator.injectionPoint.BlockInjectionPoint
 import utils.IRandom
 
 class MutationHelper(
@@ -20,7 +21,10 @@ class MutationHelper(
         }
         stmtsInBlock.removeAt(index)
         stmtsInBlock.add(index, wrapStmtsWithIf(statements))
-        stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, statements[0], mutated))
+        stmtsInBlock.add(
+            index,
+            genVarDeclWithoutRhs(parent.stmtSymbolTable!!, statements[0], mutated)
+        )
     }
 
     fun mutateTwoStmtToIf(mutBlock: MutationSubBlock) {
@@ -68,17 +72,17 @@ class MutationHelper(
         val (index, arity, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
         for (stmt in statements) {
-           pruned.add(stmt)
+            pruned.add(stmt)
             stmtsInBlock.removeAt(index)
         }
 
-        stmtsInBlock.add(index, wrapStmtsWithIFHavoc(statements))
+        stmtsInBlock.add(index, wrapStmtsWithIfHavoc(statements))
         for (stmt in statements.reversed()) {
             stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
         }
     }
 
-    private fun wrapStmtsWithIFHavoc(statements: List<DafnyStatement>): DafnyStatement {
+    private fun wrapStmtsWithIfHavoc(statements: List<DafnyStatement>): DafnyStatement {
         val thenClause = semanticPreservingMutation(statements)
         val elseClause = ElseSubStatement(semanticPreservingMutation(statements))
         val ifStmt = IfStatement(null, thenClause, elseClause, isHavoc = true)
@@ -93,58 +97,66 @@ class MutationHelper(
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 1 && statements.size == arity)
         val stmtsInBlock = parent.statements
-
         stmtsInBlock.add(index, wrapStmtsWithFor(statements))
         for (stmt in statements.reversed()) {
             stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
         }
+        changeToUpdateStatement(parent, statements)
     }
 
     fun mutateTwoStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 2 && statements.size == arity)
         val stmtsInBlock = parent.statements
-
         stmtsInBlock.add(index, wrapStmtsWithFor(statements))
         for (stmt in statements.reversed()) {
             stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
         }
+        changeToUpdateStatement(parent, statements)
     }
 
     fun mutateThreeStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 3 && statements.size == arity)
         val stmtsInBlock = parent.statements
-
         stmtsInBlock.add(index, wrapStmtsWithFor(statements))
         for (stmt in statements.reversed()) {
             stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
         }
+        changeToUpdateStatement(parent, statements)
     }
 
     fun mutateArbitraryStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
-
         stmtsInBlock.add(index, wrapStmtsWithFor(statements))
         for (stmt in statements.reversed()) {
             stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
         }
+        changeToUpdateStatement(parent, statements)
     }
 
     private fun wrapStmtsWithIf(
         statements: List<DafnyStatement>,
     ): DafnyStatement {
         val st = statements[0].stmtSymbolTable!!
+        val updatedStatements = statements.map {
+            if (it.nonLabelStmt is VariableDeclarationStatement) DafnyStatement(
+                null,
+                it.nonLabelStmt.transformToUpdate(),
+                it.nonLabelStmt.stmtSymbolTable
+            ) else it
+        }
         val nonLabel = if (rand.nextBoolean()) {
             //true
             val guard = naive.generateBooleanSimplifiedExpression(true, st).toDafnyExpression()
-            val ifStmt = IfStatement(guard, BlockStatement(statements.toMutableList(), 99), null)
+            val ifStmt =
+                IfStatement(guard, BlockStatement(updatedStatements.toMutableList(), 99), null)
             mutated.add("Changed to ${ifStmt.toDafny()}")
             ifStmt
         } else {
             val guard = naive.generateBooleanSimplifiedExpression(false, st).toDafnyExpression()
-            val elseBlock = ElseSubStatement(BlockStatement(statements.toMutableList(), 99))
+            val elseBlock = ElseSubStatement(BlockStatement(updatedStatements.toMutableList(), 99))
             val ifStmt = IfStatement(guard, BlockStatement(mutableListOf(), 99), elseBlock)
             mutated.add("Changed to ${ifStmt.toDafny()}")
             ifStmt
@@ -157,8 +169,28 @@ class MutationHelper(
         val isTo = rand.nextBoolean()
         val left = if (isTo) 0 else 1
         val right = if (isTo) 1 else 0
-        val ret = DafnyStatement(null, ForStatement(isTo, left, right,blockInFor))
+        val ret = DafnyStatement(null, ForStatement(isTo, left, right, blockInFor))
         mutated.add(ret.toDafny())
         return ret
+    }
+
+    private fun changeToUpdateStatement(
+        block: BlockStatement,
+        statements: List<DafnyStatement>
+    ) {
+        val pairs: List<Pair<DafnyStatement, BlockInjectionPoint>> =
+            statements.zip(statements)
+                .filter { it.first.nonLabelStmt is VariableDeclarationStatement }.map {
+                Pair(
+                    DafnyStatement(
+                        null,
+                        (it.first.nonLabelStmt as VariableDeclarationStatement).transformToUpdate(),
+                        it.first.nonLabelStmt.stmtSymbolTable
+                    ), BlockInjectionPoint(block, it.second, it.second.stmtSymbolTable!!)
+                )
+            }
+        for (pair in pairs) {
+            pair.second.replaceNextStmt(pair.first)
+        }
     }
 }

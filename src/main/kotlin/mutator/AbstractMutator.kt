@@ -13,8 +13,7 @@ abstract class AbstractMutator(
         val res = mutableListOf<Dafny>()
         val walker = DafnyWalker()
         repeat(mutantsNum) {
-            var mutant = mutateDafny(dafny)
-            println("++++++++++++++++++++++++++ Mutant Number $mutantsNum +++++++++++++++++++++++++++++")
+            var mutant = mutateDafny(dafny.clone())
             repeat(rand.nextInt(mutationRepetition).coerceAtLeast(1)) {
                 mutant = mutateDafny(mutant)
                 val topLevel = SymbolTable(null)

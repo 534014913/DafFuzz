@@ -10,7 +10,7 @@ import walker.DafnyWalker
 data class VariableDeclarationStatement(
     val lhs: MutableList<LocalIdentTypeOptional>,
     var rhs: List<DafnyExpression>,
-    override var stmtSymbolTable: SymbolTable? = null
+    override var stmtSymbolTable: SymbolTable? = null,
 ) : StatementNode {
     override fun toDafny(): String {
         var ret = "var "
@@ -27,12 +27,17 @@ data class VariableDeclarationStatement(
         return VariableDeclarationStatement(
             lhs.map { it.clone() }.toMutableList(),
             rhs.map { it.clone() },
-            stmtSymbolTable?.clone()
+            stmtSymbolTable?.clone(),
         )
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
         stmtSymbolTable = st.clone()
+        if (rhs.isEmpty()) {
+            lhs.forEach {
+                l -> st[l.ident] = IdentifierData(l.typeNode!!, null, null)
+            }
+        }
         lhs.zip(rhs).forEach { (l, r) ->
             if (l.typeNode != null) {
                 st[l.ident] =
@@ -80,4 +85,9 @@ data class VariableDeclarationStatement(
         }
     }
 
+    fun transformToUpdate(): UpdateStatement {
+        val hasGets = rhs.isNotEmpty()
+        val lhss = lhs.map {it.transformToLhs()}
+        return UpdateStatement(hasGets, lhss, rhs.map { it.clone() }, stmtSymbolTable)
+    }
 }

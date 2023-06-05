@@ -1,5 +1,6 @@
 package ast
 
+import ast.primaryExpressions.NameSegment
 import ast.symbolTable.SymbolTable
 import ast.types.TypeNode
 import ast.types.UndecidedType
@@ -18,5 +19,10 @@ data class LocalIdentTypeOptional(
 
     fun inferType(st: SymbolTable): TypeNode {
         return typeNode ?: UndecidedType("no type in local ident, possibly from let epxr")
+    }
+
+    fun transformToLhs(): Lhs {
+        val lhsExpr = NameSegment(ident)
+        return Lhs(lhsExpr, emptyList())
     }
 }
