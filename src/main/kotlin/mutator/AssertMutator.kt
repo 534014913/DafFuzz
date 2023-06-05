@@ -1,24 +1,26 @@
 package mutator
 
-import ast.statements.BlockStatement
 import ast.Dafny
-import ast.statements.DafnyStatement
+import ast.statements.BlockStatement
 import astGenerator.AstGenerator
+import isLivenessAssigned
+import mutator.injectionPoint.BlockInjectionPoint
 import utils.IRandom
 
 // IDEA: add 1 random "assert false" to a live block and B add multiple assert/assume false to dead block
 class AssertMutator(
-    val upBlocks: Set<Int>,
     val falseAsserts: Int,
     val falseAssertsAssumes: Int,
     val generator: AstGenerator,
+    mutationRepetition: Int,
     rand: IRandom
-) : AbstractMutator(rand) {
+) : AbstractMutator(mutationRepetition, rand) {
 
     override fun mutateDafny(dafny: Dafny): Dafny {
         val dafnyClone = dafny.clone()
-        val deadBlocks = findBlocks(dafnyClone, findDead = true)
-        val liveBlocks = findBlocks(dafnyClone, findDead = false)
+        assert(isLivenessAssigned)
+        val deadBlocks = findBlockInjectionPoints(dafnyClone, findLive = false)
+        val liveBlocks = findBlockInjectionPoints(dafnyClone, findLive = true)
 
         repeat(falseAsserts) {
             insertFalseAssertsToLive(liveBlocks)
@@ -29,44 +31,56 @@ class AssertMutator(
         }
         return dafnyClone
     }
-    private fun findBlocks(dafny: Dafny, findDead: Boolean): List<BlockStatement> {
+
+    private fun findBlockInjectionPoints(dafny: Dafny, findLive: Boolean): List<BlockInjectionPoint> {
         val methods = dafny.toplevels
-        val deadBlocks = mutableListOf<BlockStatement>()
+        val injectionPoint = mutableListOf<BlockInjectionPoint>()
         for (method in methods) {
             val member = method.classMember
             //TODO: function not considered at the moment
             if (member.isMethod) {
-                addDeadBlocks(member.method!!.blockStatement, deadBlocks, findDead = findDead)
+                addInjectionPoints(member.method!!.blockStatement, injectionPoint, findLive = findLive)
             }
         }
-        return deadBlocks
+        return injectionPoint
     }
 
-    private fun addDeadBlocks(block: BlockStatement, deadBlocks: MutableList<BlockStatement>, findDead: Boolean) {
-        if ((block.ident !in upBlocks) == findDead) {
-            deadBlocks.add(block)
+    private fun addInjectionPoints(
+        block: BlockStatement,
+        injectionPoints: MutableList<BlockInjectionPoint>,
+        findLive: Boolean
+    ) {
+        if (block.isLive == findLive) {
+            injectionPoints.addAll(generateAllInjectionPoints(block))
         }
+
         for (ds in block.statements) {
-            addDeadBlocksDS(ds, deadBlocks, findDead = findDead)
+            val statement = ds.nonLabelStmt
+            if (statement is BlockStatement) {
+                addInjectionPoints(statement, injectionPoints, findLive)
+            }
         }
     }
 
-    private fun addDeadBlocksDS(dStatement: DafnyStatement, deadBlocks: MutableList<BlockStatement>, findDead: Boolean) {
-        when (val stmt = dStatement.nonLabelStmt) {
-            is BlockStatement -> addDeadBlocks(stmt, deadBlocks, findDead)
-            else -> return
+    private fun generateAllInjectionPoints(block: BlockStatement): List<BlockInjectionPoint> {
+        val list = block.statements.map { BlockInjectionPoint(block, it, it.stmtSymbolTable!!) }.toMutableList()
+        list.add(BlockInjectionPoint(block, null, block.stmtSymbolTable!!))
+        return list
+    }
+
+    private fun insertFalseAssertsToLive(lives: List<BlockInjectionPoint>) {
+        val randomPoint = lives[rand.nextInt(lives.size)]
+        val assertStmt = generator.genAssertStatement(true, randomPoint.symbolTable)
+        randomPoint.inject(assertStmt)
+    }
+
+    private fun insertFalseAssertsAssumesToDead(deads: List<BlockInjectionPoint>) {
+        val randomPoint = deads[rand.nextInt(deads.size)]
+        val statement = if (rand.nextBoolean()) {
+            generator.genAssertStatement(false, randomPoint.symbolTable)
+        } else {
+            generator.genAssumeStatement(false, randomPoint.symbolTable)
         }
-    }
-
-    private fun insertFalseAssertsToLive(lives: List<BlockStatement>) {
-        val block = lives[rand.nextInt(lives.size)]
-        val id = rand.nextInt(block.statements.size)
-        val stmt = block.statements[id]
-        val assertStmt = generator.genAssertStatement(false, stmt.stmtSymbolTable!!)
-        block.statements.add(id, assertStmt)
-    }
-
-    private fun insertFalseAssertsAssumesToDead(deads: List<BlockStatement>) {
-        TODO("Not implemented")
+        randomPoint.inject(statement)
     }
 }
