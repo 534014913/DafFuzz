@@ -660,20 +660,22 @@ class SimplifiedExpressionGenerator(
         type: KClass<out TypeNode>,
         st: SymbolTable
     ): SimplifiedExpression {
-        val varList = st.getVariablesOfType(type)
-        if (type == BoolNode::class) {
-            varList.filter { it.second == truthValue.toString() }
-        }
-        if (varList.isNotEmpty()) {
-            val (ident, value) = varList[random.nextInt(varList.size)]
-            val typeNode = when (type) {
-                BoolNode::class -> BoolNode(99)
-                CharNode::class -> CharNode()
-                IntNode::class -> IntNode()
-                StringNode::class -> StringNode()
-                else -> throw RuntimeException()
+        if (random.nextFloat() <= 0.3) {
+            val varList = st.getVariablesOfType(type)
+            if (type == BoolNode::class) {
+                varList.filter { it.second == truthValue.toString() }
             }
-            return generateSimplifiedNameSegment(ident, value, typeNode)
+            if (varList.isNotEmpty()) {
+                val (ident, value) = varList[random.nextInt(varList.size)]
+                val typeNode = when (type) {
+                    BoolNode::class -> BoolNode(99)
+                    CharNode::class -> CharNode()
+                    IntNode::class -> IntNode()
+                    StringNode::class -> StringNode()
+                    else -> throw RuntimeException()
+                }
+                return generateSimplifiedNameSegment(ident, value, typeNode)
+            }
         }
         return when (type) {
             BoolNode::class -> generateBooleanLiteral(truthValue)
