@@ -3,7 +3,6 @@ package ast.statements
 import ast.Lhs
 import ast.expressions.DafnyExpression
 import ast.symbolTable.SymbolTable
-import astGenerator.AstGenerator
 import astGenerator.genHavocDafnyExpression
 import walker.DafnyWalker
 
@@ -43,7 +42,7 @@ data class UpdateStatement(
         }
     }
 
-    fun havocRhs(astGenerator: AstGenerator, history: MutableList<String>) {
+    fun havocRhs(history: MutableList<String>) {
         if (rhss.size == 1) {
             var h = rhss[0].toDafny()
             rhss = listOf(genHavocDafnyExpression())

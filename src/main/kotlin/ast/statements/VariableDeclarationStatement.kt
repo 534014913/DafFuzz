@@ -4,7 +4,6 @@ import ast.LocalIdentTypeOptional
 import ast.expressions.DafnyExpression
 import ast.symbolTable.IdentifierData
 import ast.symbolTable.SymbolTable
-import astGenerator.AstGenerator
 import astGenerator.genHavocDafnyExpression
 import walker.DafnyWalker
 
@@ -45,7 +44,7 @@ data class VariableDeclarationStatement(
         }
     }
 
-    fun havocRhs(astGenerator: AstGenerator, history: MutableList<String>) {
+    fun havocRhs(history: MutableList<String>) {
         if (rhs.size == 1) {
             var h = rhs[0].toDafny()
             rhs = listOf(genHavocDafnyExpression())

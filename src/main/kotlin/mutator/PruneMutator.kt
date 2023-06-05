@@ -1,9 +1,8 @@
 package mutator
 
-import ast.statements.BlockStatement
 import ast.Dafny
+import ast.statements.BlockStatement
 import ast.statements.DafnyStatement
-import astGenerator.SimpleGenerator
 import utils.IRandom
 import kotlin.math.min
 
@@ -15,8 +14,6 @@ class PruneMutator(
     val shuffle: Boolean,
     rand: IRandom
 ) : AbstractMutator(rand) {
-    private val astGenerator = SimpleGenerator(rand)
-
     override fun mutateDafny(dafny: Dafny): Dafny {
         val dafnyClone = dafny.clone()
 //        println("----------symbol table null before clone?-----------")
@@ -90,7 +87,7 @@ class PruneMutator(
             } else {
                 dafnyClone.addPruned(s.clone())
                 s.annotateLhsWithType(dafnyClone.changeHistory)
-                s.havocRhs(astGenerator, dafnyClone.changeHistory)
+                s.havocRhs(dafnyClone.changeHistory)
             }
         }
         // also remove any update statement in dead block

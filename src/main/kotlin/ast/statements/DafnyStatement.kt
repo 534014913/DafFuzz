@@ -1,7 +1,6 @@
 package ast.statements
 
 import ast.symbolTable.SymbolTable
-import astGenerator.AstGenerator
 import walker.DafnyWalker
 
 data class DafnyStatement(
@@ -28,12 +27,12 @@ data class DafnyStatement(
         nonLabelStmt.walk(st, walker)
     }
 
-    fun havocRhs(astGenerator: AstGenerator, history: MutableList<String>) {
+    fun havocRhs(history: MutableList<String>) {
         if (nonLabelStmt is VariableDeclarationStatement) {
-            nonLabelStmt.havocRhs(astGenerator, history)
+            nonLabelStmt.havocRhs(history)
         }
         if (nonLabelStmt is UpdateStatement) {
-            nonLabelStmt.havocRhs(astGenerator, history)
+            nonLabelStmt.havocRhs(history)
         }
     }
 
