@@ -4,10 +4,6 @@ import ast.expressions.*
 import ast.primaryExpressions.PrimaryExpressionWithSuffix
 
 abstract class SimplifiedLiteralExpression : SimplifiedExpression {
-    final override fun toDafnyExpression(): DafnyExpression {
-        return DafnyExpression(listOf(toImpliesExpliesExpression()))
-    }
-
     final override fun toImpliesExpliesExpression(): ImpliesExpliesExpression {
         return ImpliesExpliesExpression(
             toLogicalExpression(),

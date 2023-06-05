@@ -43,7 +43,7 @@ class SimplifiedTerm(
             }
 
             BinaryOperator.MOD -> {
-                if (rhs == BigInteger("0")) {
+                if (rhs == BigInteger("0") || rhs.signum() <= 0) {
                     rhs = BigInteger("1")
                 }
                 lhs.mod(rhs).toString()
@@ -92,6 +92,6 @@ class SimplifiedTerm(
     }
 
     override fun toDafnyExpression(): DafnyExpression {
-        return DafnyExpression(listOf(toImpliesExpliesExpression()))
+        return DafnyExpression(listOf(toImpliesExpliesExpression()), null)
     }
 }

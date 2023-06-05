@@ -1,9 +1,6 @@
 package mutator.simplifiedExpressions
 
 import ast.expressions.*
-import ast.primaryExpressions.ParensExpression
-import ast.primaryExpressions.PrimaryExpressionWithSuffix
-import ast.primaryExpressions.TupleArgs
 
 class SimplifiedRelationalExpression(
     val exprLhs: SimplifiedExpression,
@@ -14,6 +11,7 @@ class SimplifiedRelationalExpression(
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(
             listOf(toImpliesExpliesExpression()),
+            truthValueUnder
         )
     }
 

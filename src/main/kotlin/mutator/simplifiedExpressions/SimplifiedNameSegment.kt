@@ -1,6 +1,7 @@
 package mutator.simplifiedExpressions
 
 import ast.expressions.AsExpression
+import ast.expressions.DafnyExpression
 import ast.expressions.UnaryExpression
 import ast.primaryExpressions.NameSegment
 import ast.primaryExpressions.PrimaryExpressionWithSuffix
@@ -12,6 +13,9 @@ class SimplifiedNameSegment(
     val value: String,
     val type: TypeNode
 ): SimplifiedLiteralExpression()  {
+    override fun toDafnyExpression(): DafnyExpression {
+        return DafnyExpression(listOf(toImpliesExpliesExpression()), if (type is BoolNode) value == "true" else null)
+    }
     override fun toAsExpression(): AsExpression {
         val primary = PrimaryExpressionWithSuffix(NameSegment(ident), emptyList())
         val unary = UnaryExpression(null, null, isPrimary = true, primary)

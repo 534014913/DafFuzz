@@ -35,25 +35,40 @@ fun genTermFromAsExpression(asExpr: AsExpression): Term {
 //    return RelationalExpression(term, hasSubTerms = false, emptyList(), emptyList())
 //}
 
-fun genRelationalExpressionFromTerms(termL: Term, termR: Term, relOp: RelationalOperator): RelationalExpression {
+fun genRelationalExpressionFromTerms(
+    termL: Term,
+    termR: Term,
+    relOp: RelationalOperator
+): RelationalExpression {
     return RelationalExpression(termL, hasSubTerms = true, listOf(relOp), listOf(termR))
 }
 
 fun genImpliesExpliesFromRelational(relational: RelationalExpression): ImpliesExpliesExpression {
-    val logical = LogicalExpression(null, relational, emptyList(), emptyList(), hasMoreRelational = false)
-    return ImpliesExpliesExpression(logical, isSimplest = true, isImplies = false, null, emptyList())
+    val logical =
+        LogicalExpression(null, relational, emptyList(), emptyList(), hasMoreRelational = false)
+    return ImpliesExpliesExpression(
+        logical,
+        isSimplest = true,
+        isImplies = false,
+        null,
+        emptyList()
+    )
 }
 
 fun genDafnyExpressionFromImpliesExplies(vararg impliesExplies: ImpliesExpliesExpression): DafnyExpression {
-   if (impliesExplies.isEmpty()) throw RuntimeException("should not be empty")
-   return DafnyExpression(impliesExplies.toList())
+    if (impliesExplies.isEmpty()) throw RuntimeException("should not be empty")
+    return DafnyExpression(impliesExplies.toList(), null)
 }
 
 fun genHavocDafnyExpression(): DafnyExpression {
-    return DafnyExpression(emptyList(), isHavoc = true)
+    return DafnyExpression(emptyList(), null, isHavoc = true)
 }
 
-fun genVarDeclWithoutRhs(st: SymbolTable, ds: DafnyStatement, log: MutableList<String>): DafnyStatement {
+fun genVarDeclWithoutRhs(
+    st: SymbolTable,
+    ds: DafnyStatement,
+    log: MutableList<String>
+): DafnyStatement {
     assert(ds.nonLabelStmt is VariableDeclarationStatement)
     val decl = (ds.nonLabelStmt as VariableDeclarationStatement).clone()
     assert(decl.lhs.size == 1)

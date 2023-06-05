@@ -12,7 +12,7 @@ class SimplifiedLogicalExpression(
     var truthValueUnder: Boolean?
 ) : SimplifiedExpression {
     override fun toDafnyExpression(): DafnyExpression {
-        return DafnyExpression(listOf(toImpliesExpliesExpression()))
+        return DafnyExpression(listOf(toImpliesExpliesExpression()), truthValueUnder)
     }
 
     override fun toImpliesExpliesExpression(): ImpliesExpliesExpression {

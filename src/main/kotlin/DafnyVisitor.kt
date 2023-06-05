@@ -353,7 +353,7 @@ class DafnyVisitor : DafnyParserBaseVisitor<ASTNode>() {
         for (im in ctx.impliesExpliesExpression()) {
             impliesExplies.add(visitImpliesExpliesExpression(im))
         }
-        return DafnyExpression(impliesExplies)
+        return DafnyExpression(impliesExplies, null)
     }
 
     override fun visitImpliesExpliesExpression(ctx: DafnyParser.ImpliesExpliesExpressionContext?): ImpliesExpliesExpression {

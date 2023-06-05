@@ -37,6 +37,9 @@ data class UpdateStatement(
         }
         stmtSymbolTable = st.clone()
         lhss.zip(rhss).forEach { (l, r) ->
+            if (st[l.getIdent()] == null) {
+
+            }
             st[l.getIdent()] =
                 st[l.getIdent()]!!.copy(textRepresentation = r.getTextRepresentationOrNull())
         }

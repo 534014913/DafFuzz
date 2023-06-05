@@ -7,6 +7,7 @@ import ast.types.UndecidedType
 
 data class DafnyExpression(
     val impliesExplies: List<ImpliesExpliesExpression>,
+    val truthValue: Boolean?,
     val isHavoc: Boolean = false
 ) : ExpressionNode {
     override fun toDafny(): String {
@@ -18,7 +19,7 @@ data class DafnyExpression(
     }
 
     override fun clone(): DafnyExpression {
-        return DafnyExpression(impliesExplies.map { it.clone() })
+        return DafnyExpression(impliesExplies.map { it.clone() }, truthValue)
     }
 
     fun getTextRepresentationOrNull(): String? {

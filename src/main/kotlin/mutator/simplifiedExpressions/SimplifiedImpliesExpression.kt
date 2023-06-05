@@ -10,7 +10,7 @@ class SimplifiedImpliesExpression(
     var truthValueUnder: Boolean?
 ):SimplifiedImpliesExpliesExpression {
     override fun toDafnyExpression(): DafnyExpression {
-        return DafnyExpression(listOf(toImpliesExpliesExpression()))
+        return DafnyExpression(listOf(toImpliesExpliesExpression()), truthValueUnder)
     }
 
     override fun toImpliesExpliesExpression(): ImpliesExpliesExpression {

@@ -13,7 +13,8 @@ class SimplifiedEquivalenceExpression(
             listOf(
                 lhs.toImpliesExpliesExpression(),
                 rhs.toImpliesExpliesExpression()
-            )
+            ),
+            truthValueUnder
         )
     }
 
