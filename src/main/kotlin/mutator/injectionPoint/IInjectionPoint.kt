@@ -17,16 +17,12 @@
 package mutator.injectionPoint
 
 import ast.statements.DafnyStatement
-import ast.symbolTable.SymbolTable
 
 interface IInjectionPoint {
     fun inject(stmt: DafnyStatement)
-
-    fun getNextStmt(): DafnyStatement?
 
     fun hasNextStmt(): Boolean
 
     fun replaceNextStmt(stmt: DafnyStatement)
 
-    fun getSymbolTable(): SymbolTable
 }

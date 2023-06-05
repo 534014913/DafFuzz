@@ -1,12 +1,15 @@
 package mutator.simplifiedExpressions
 
 import ast.expressions.*
+import ast.primaryExpressions.ParensExpression
+import ast.primaryExpressions.PrimaryExpressionWithSuffix
+import ast.primaryExpressions.TupleArgs
 
 class SimplifiedRelationalExpression(
-    val exprLhs: Term,
+    val exprLhs: SimplifiedExpression,
     val op: RelationalOperator,
-    val exprRhs: Term,
-    val truthValue: Boolean?
+    val exprRhs: SimplifiedExpression,
+    val truthValueUnder: Boolean?
     ): SimplifiedExpression {
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(
@@ -43,17 +46,19 @@ class SimplifiedRelationalExpression(
         )
     }
 
+
+
     override fun isBooleanExpression(): Boolean {
         return true
     }
 
     override fun getTruthValue(): Boolean? {
         assert(isBooleanExpression())
-        return truthValue
+        return truthValueUnder
     }
 
     override fun getCanonicalForm(): String {
-        assert(truthValue != null)
-        return truthValue.toString()
+        assert(truthValueUnder != null)
+        return truthValueUnder.toString()
     }
 }

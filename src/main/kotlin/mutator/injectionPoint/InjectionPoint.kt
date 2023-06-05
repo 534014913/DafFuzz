@@ -21,7 +21,4 @@ import ast.symbolTable.SymbolTable
 abstract class InjectionPoint(
     val symbolTable: SymbolTable
 ): IInjectionPoint {
-    override fun getSymbolTable(): SymbolTable {
-        return symbolTable
-    }
 }

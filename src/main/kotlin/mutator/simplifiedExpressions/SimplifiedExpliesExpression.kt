@@ -6,7 +6,7 @@ import ast.expressions.ImpliesExpliesExpression
 class SimplifiedExpliesExpression(
     val lhs: SimplifiedLogicalExpression,
     val rhs: SimplifiedLogicalExpression,
-    var truthValue: Boolean?
+    var truthValueUnder: Boolean?
 ) : SimplifiedImpliesExpliesExpression {
 
     override fun toDafnyExpression(): DafnyExpression {
@@ -28,14 +28,14 @@ class SimplifiedExpliesExpression(
     }
 
     override fun getTruthValue(): Boolean {
-        if (truthValue == null) {
-            truthValue = !(lhs.getTruthValue() == false && rhs.getTruthValue() == true)
+        if (truthValueUnder == null) {
+            truthValueUnder = !(lhs.getTruthValue() == false && rhs.getTruthValue() == true)
         }
-        return truthValue!!
+        return truthValueUnder!!
     }
 
     override fun getCanonicalForm(): String {
         getTruthValue()
-        return truthValue.toString()
+        return truthValueUnder.toString()
     }
 }

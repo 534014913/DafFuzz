@@ -39,11 +39,6 @@ class BlockInjectionPoint(
         return nextStmt != null
     }
 
-    override fun getNextStmt(): DafnyStatement? {
-        assert(hasNextStmt())
-        return nextStmt
-    }
-
     override fun replaceNextStmt(stmt: DafnyStatement) {
         assert(hasNextStmt())
         for (i in block.getIndices()) {

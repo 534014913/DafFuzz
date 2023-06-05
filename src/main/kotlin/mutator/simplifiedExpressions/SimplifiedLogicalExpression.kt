@@ -9,7 +9,7 @@ class SimplifiedLogicalExpression(
     val exprLhs: SimplifiedExpression,
     val op: LogicalOperator,
     val exprRhs: SimplifiedExpression,
-    var truthValue: Boolean?
+    var truthValueUnder: Boolean?
 ) : SimplifiedExpression {
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(listOf(toImpliesExpliesExpression()))
@@ -40,12 +40,12 @@ class SimplifiedLogicalExpression(
     }
 
     override fun getTruthValue(): Boolean? {
-        if (truthValue == null) {
+        if (truthValueUnder == null) {
             if (op == LogicalOperator.AND_OP) {
-                truthValue = exprLhs.getTruthValue()!! && exprRhs.getTruthValue()!!
+                truthValueUnder = exprLhs.getTruthValue()!! && exprRhs.getTruthValue()!!
             }
         }
-        return truthValue
+        return truthValueUnder
     }
 
     override fun getCanonicalForm(): String {

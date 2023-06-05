@@ -7,7 +7,7 @@ import ast.expressions.ImpliesExpression
 class SimplifiedImpliesExpression(
     val lhsLogical: SimplifiedExpression,
     val rhsLogical: SimplifiedExpression,
-    var truthValue: Boolean?
+    var truthValueUnder: Boolean?
 ):SimplifiedImpliesExpliesExpression {
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(listOf(toImpliesExpliesExpression()))
@@ -28,17 +28,17 @@ class SimplifiedImpliesExpression(
     }
 
     override fun getTruthValue(): Boolean {
-        if (truthValue == null) {
-            truthValue =
+        if (truthValueUnder == null) {
+            truthValueUnder =
                 !(lhsLogical.getTruthValue() == true && rhsLogical.getTruthValue() == false)
         }
-        return truthValue!!
+        return truthValueUnder!!
     }
 
     override fun getCanonicalForm(): String {
         getTruthValue()
-        assert(truthValue != null)
-        return truthValue.toString()
+        assert(truthValueUnder != null)
+        return truthValueUnder.toString()
     }
 
 //    private fun toImplies(logicalExpressions: List<SimplifiedExpression>): ImpliesExpression {

@@ -6,7 +6,7 @@ import ast.expressions.DafnyExpression
 class SimplifiedEquivalenceExpression(
     val lhs: SimplifiedExpression,
     val rhs: SimplifiedExpression,
-    var truthValue: Boolean?
+    var truthValueUnder: Boolean?
 ) : SimplifiedExpression {
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(
@@ -22,14 +22,15 @@ class SimplifiedEquivalenceExpression(
     }
 
     override fun getTruthValue(): Boolean? {
-        return truthValue
+        return truthValueUnder
     }
 
+
     override fun getCanonicalForm(): String {
-        if (truthValue == null) {
-            truthValue = lhs.getTruthValue() == rhs.getTruthValue()
+        if (truthValueUnder == null) {
+            truthValueUnder= lhs.getTruthValue() == rhs.getTruthValue()
         }
-        return truthValue.toString()
+        return truthValueUnder.toString()
     }
 
 }
