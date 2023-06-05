@@ -16,22 +16,11 @@
 
 package mutator.injectionPoint
 
-import ast.method.MethodDeclaration
 import ast.symbolTable.SymbolTable
 
 abstract class InjectionPoint(
-    val methodDecl: MethodDeclaration,
-    val inLoop: Boolean,
     val symbolTable: SymbolTable
 ): IInjectionPoint {
-    override fun getMethodDeclaration(): MethodDeclaration {
-        return methodDecl
-    }
-
-    override fun inLoop(): Boolean {
-        return inLoop
-    }
-
     override fun getSymbolTable(): SymbolTable {
         return symbolTable
     }

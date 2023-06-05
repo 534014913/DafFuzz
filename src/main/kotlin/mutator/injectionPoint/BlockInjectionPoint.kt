@@ -16,7 +16,6 @@
 
 package mutator.injectionPoint
 
-import ast.method.MethodDeclaration
 import ast.statements.BlockStatement
 import ast.statements.DafnyStatement
 import ast.symbolTable.SymbolTable
@@ -24,11 +23,9 @@ import ast.symbolTable.SymbolTable
 class BlockInjectionPoint(
     val block: BlockStatement,
     val nextStmt: DafnyStatement?,
-    methodDecl: MethodDeclaration,
-    inLoop: Boolean,
     symbolTable: SymbolTable
-): InjectionPoint(
-    methodDecl, inLoop, symbolTable
+) : InjectionPoint(
+    symbolTable
 ) {
     override fun inject(stmt: DafnyStatement) {
         if (nextStmt == null) {

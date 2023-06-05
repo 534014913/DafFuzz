@@ -5,13 +5,6 @@ import ast.expressions.RelationalExpression
 import ast.expressions.RelationalOperator
 
 class ExprMutator {
-//    fun swapTerm(t: Term): Term {
-//        if (t.biOp.size == 1) {
-//            assert(t.restAsExps.size == 1)
-//            if (t.asExp is )
-//        }
-//    }
-
     fun swapLogicalExpr(le: LogicalExpression): LogicalExpression {
         if (le.firstLogical != null) {
             return le.clone()

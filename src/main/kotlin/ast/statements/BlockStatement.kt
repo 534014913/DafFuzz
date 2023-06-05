@@ -7,7 +7,8 @@ data class BlockStatement(
     var statements: MutableList<DafnyStatement>,
     val ident: Int,
     var printIdent: Boolean = false,
-    override var stmtSymbolTable: SymbolTable? = null
+    override var stmtSymbolTable: SymbolTable? = null,
+    var isLive: Boolean = false
 ) : StatementNode {
     override fun toDafny(): String {
 //        val prefix = addTabs()
@@ -70,5 +71,13 @@ data class BlockStatement(
             stmt.walk(st, walker)
         }
         stmtSymbolTable = st
+    }
+
+    fun setToLive() {
+        isLive  = true
+    }
+
+    fun setToDead() {
+        isLive = false
     }
 }

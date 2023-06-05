@@ -16,7 +16,6 @@
 
 package mutator.injectionPoint
 
-import ast.method.MethodDeclaration
 import ast.statements.DafnyStatement
 import ast.symbolTable.SymbolTable
 
@@ -28,10 +27,6 @@ interface IInjectionPoint {
     fun hasNextStmt(): Boolean
 
     fun replaceNextStmt(stmt: DafnyStatement)
-
-    fun inLoop(): Boolean
-
-    fun getMethodDeclaration(): MethodDeclaration
 
     fun getSymbolTable(): SymbolTable
 }
