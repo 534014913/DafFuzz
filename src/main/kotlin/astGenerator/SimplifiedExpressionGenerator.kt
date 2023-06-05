@@ -113,6 +113,7 @@
 package astGenerator
 
 import ast.expressions.BinaryOperator
+import ast.expressions.DafnyExpression
 import ast.expressions.LogicalOperator
 import ast.expressions.RelationalOperator
 import ast.symbolTable.SymbolTable
@@ -148,9 +149,32 @@ val PROB_OPERATOR_MAP: MutableMap<BinaryOperator, Int> = mutableMapOf(
 
 const val MAX_STRING_SIZE = 100
 
-class SimplifiedGenerator(
+class SimplifiedExpressionGenerator(
     val random: IRandom
-) {
+): ExpressionGenerator {
+    override fun generateBooleanDafnyExpression(
+        truthValue: Boolean,
+        st: SymbolTable
+    ): DafnyExpression {
+        return generateBooleanSimplifiedExpression(truthValue, st).toDafnyExpression()
+    }
+
+    override fun genDafnyExpressionIntLiteral(): DafnyExpression {
+        return generateIntegerLiteral().toDafnyExpression()
+    }
+
+    override fun genDafnyExpressionBoolLiteral(): DafnyExpression {
+        return generateBooleanLiteral().toDafnyExpression()
+    }
+
+    override fun genDafnyExpressionCharLiteral(): DafnyExpression {
+        return generateCharacterLiteral().toDafnyExpression()
+    }
+
+    override fun genDafnyExpressionStringLiteral(): DafnyExpression {
+        return generateStringLiteral().toDafnyExpression()
+    }
+
     fun generateBooleanSimplifiedExpression(
         truthValue: Boolean,
         st: SymbolTable
@@ -671,6 +695,10 @@ class SimplifiedGenerator(
         return SimplifiedBooleanLiteral(truthValue)
     }
 
+    private fun generateBooleanLiteral(): SimplifiedExpression {
+        return SimplifiedBooleanLiteral(random.nextBoolean())
+    }
+
     private fun generateCharacterLiteral(): SimplifiedExpression {
         val charPool = ('a'..'z') + ('A'..'Z') + ('0'..'9')
         return SimplifiedCharacterLiteral(charPool[random.nextInt(charPool.size)])
@@ -710,4 +738,6 @@ class SimplifiedGenerator(
         val cumulativeWeightMap = weightPairList.map { acc += it.second; it.first to acc; }
         return cumulativeWeightMap.first { it.second > target }.first
     }
+
+
 }

@@ -1,7 +1,7 @@
 package mutator
 
 import ast.statements.*
-import astGenerator.NaiveExprGenerator
+import astGenerator.SimplifiedExpressionGenerator
 import astGenerator.genVarDeclWithoutRhs
 import utils.IRandom
 
@@ -10,7 +10,7 @@ class MutationHelper(
     val mutated: MutableList<String>, // statements mutated to during mutation
     val rand: IRandom,
 ) {
-    val naive = NaiveExprGenerator(rand)
+    val naive = SimplifiedExpressionGenerator(rand)
     fun mutateOneStmtToIf(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         assert(arity == 1 && statements.size == 1)
@@ -149,12 +149,12 @@ class MutationHelper(
         val st = statements[0].stmtSymbolTable!!
         val nonLabel = if (rand.nextBoolean()) {
             //true
-            val guard = naive.genDafnyExpression(result = true, st)
+            val guard = naive.generateBooleanSimplifiedExpression(true, st).toDafnyExpression()
             val ifStmt = IfStatement(guard, BlockStatement(statements.toMutableList(), 99), null)
             mutated.add("Changed to ${ifStmt.toDafny()}")
             ifStmt
         } else {
-            val guard = naive.genDafnyExpression(result = false, st)
+            val guard = naive.generateBooleanSimplifiedExpression(false, st).toDafnyExpression()
             val elseBlock = ElseSubStatement(BlockStatement(statements.toMutableList(), 99))
             val ifStmt = IfStatement(guard, BlockStatement(mutableListOf(), 99), elseBlock)
             mutated.add("Changed to ${ifStmt.toDafny()}")

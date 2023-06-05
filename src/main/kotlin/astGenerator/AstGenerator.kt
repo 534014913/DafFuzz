@@ -6,15 +6,10 @@ import ast.symbolTable.SymbolTable
 import utils.IRandom
 
 sealed class AstGenerator(
+    val expressionGenerator: ExpressionGenerator,
     val rand: IRandom
 ) {
-    abstract fun genDafnyExpressionIntLiteral(): DafnyExpression
 
-    abstract fun genDafnyExpressionBoolLiteral(): DafnyExpression
-
-    abstract fun genDafnyExpressionCharLiteral(): DafnyExpression
-
-    abstract fun genDafnyExpressionStringLiteral(): DafnyExpression
 
     abstract fun genAssertStatement(result: Boolean, st: SymbolTable): DafnyStatement
 

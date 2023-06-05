@@ -12,8 +12,9 @@ class PruneMutator(
     private val upBlocks: Set<Int>,
     private val pruneNumber: Int, // number of statements in a block statement that can be pruned
     val shuffle: Boolean,
+    mutationRepetition: Int = 1,
     rand: IRandom
-) : AbstractMutator(rand) {
+) : AbstractMutator(mutationRepetition, rand) {
     override fun mutateDafny(dafny: Dafny): Dafny {
         val dafnyClone = dafny.clone()
 //        println("----------symbol table null before clone?-----------")
