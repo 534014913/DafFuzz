@@ -149,9 +149,12 @@ val PROB_OPERATOR_MAP: MutableMap<BinaryOperator, Int> = mutableMapOf(
 
 const val MAX_STRING_SIZE = 100
 
+const val MAX_INT_TERM_DEPTH = 10
+var currentIntDepth = 0
+
 class SimplifiedExpressionGenerator(
     val random: IRandom
-): ExpressionGenerator {
+) : ExpressionGenerator {
     override fun generateBooleanDafnyExpression(
         truthValue: Boolean,
         st: SymbolTable
@@ -432,16 +435,16 @@ class SimplifiedExpressionGenerator(
         }
         return if (truthValue) {
             SimplifiedRelationalExpression(
-                lhs.toTerm(),
+                lhs,
                 RelationalOperator.LESSEQ,
-                rhs.toTerm(),
+                rhs,
                 true
             )
         } else {
             SimplifiedRelationalExpression(
-                rhs.toTerm(),
+                rhs,
                 RelationalOperator.LESSEQ,
-                lhs.toTerm(),
+                lhs,
                 false
             )
         }
@@ -464,16 +467,16 @@ class SimplifiedExpressionGenerator(
         }
         return if (truthValue) {
             SimplifiedRelationalExpression(
-                lhs.toTerm(),
+                lhs,
                 RelationalOperator.GREATEREQ,
-                rhs.toTerm(),
+                rhs,
                 true
             )
         } else {
             SimplifiedRelationalExpression(
-                rhs.toTerm(),
+                rhs,
                 RelationalOperator.GREATEREQ,
-                lhs.toTerm(),
+                lhs,
                 false
             )
         }
@@ -499,16 +502,16 @@ class SimplifiedExpressionGenerator(
         }
         return if (truthValue) {
             SimplifiedRelationalExpression(
-                lhs.toTerm(),
+                lhs,
                 RelationalOperator.GREATER,
-                rhs.toTerm(),
+                rhs,
                 true
             )
         } else {
             SimplifiedRelationalExpression(
-                rhs.toTerm(),
+                rhs,
                 RelationalOperator.GREATER,
-                lhs.toTerm(),
+                lhs,
                 false
             )
         }
@@ -535,16 +538,16 @@ class SimplifiedExpressionGenerator(
         assert(BigInteger(lhs.getCanonicalForm()) < BigInteger(rhs.getCanonicalForm()))
         return if (truthValue) {
             SimplifiedRelationalExpression(
-                lhs.toTerm(),
+                lhs,
                 RelationalOperator.LESS,
-                rhs.toTerm(),
+                rhs,
                 true
             )
         } else {
             SimplifiedRelationalExpression(
-                rhs.toTerm(),
+                rhs,
                 RelationalOperator.LESS,
-                lhs.toTerm(),
+                lhs,
                 false
             )
         }
@@ -558,9 +561,9 @@ class SimplifiedExpressionGenerator(
         val lhs = generateSimplifiedTerm(type, st)
         return if (!truthValue) {
             SimplifiedRelationalExpression(
-                lhs.toTerm(),
+                lhs,
                 RelationalOperator.NOTEQ,
-                lhs.toTerm(),
+                lhs,
                 false
             )
         } else {
@@ -569,9 +572,9 @@ class SimplifiedExpressionGenerator(
                 rhs = generateSimplifiedTerm(type, st)
             }
             SimplifiedRelationalExpression(
-                lhs.toTerm(),
+                lhs,
                 RelationalOperator.NOTEQ,
-                rhs.toTerm(),
+                rhs,
                 true
             )
         }
@@ -585,9 +588,9 @@ class SimplifiedExpressionGenerator(
         val lhs = generateSimplifiedTerm(type, st)
         return if (truthValue) {
             SimplifiedRelationalExpression(
-                lhs.toTerm(),
+                lhs,
                 RelationalOperator.EQ,
-                lhs.toTerm(),
+                lhs,
                 truthValue
             )
         } else {
@@ -596,9 +599,9 @@ class SimplifiedExpressionGenerator(
                 rhs = generateSimplifiedTerm(type, st)
             }
             SimplifiedRelationalExpression(
-                lhs.toTerm(),
+                lhs,
                 RelationalOperator.EQ,
-                rhs.toTerm(),
+                rhs,
                 truthValue
             )
         }
@@ -639,11 +642,17 @@ class SimplifiedExpressionGenerator(
     }
 
     private fun generateIntTerm(st: SymbolTable): SimplifiedExpression {
-        return if (random.nextFloat() > 0.7) {
-            generateSimplifiedLiteralExpression(random.nextBoolean(), IntNode::class, st)
+        var ret: SimplifiedExpression? = null
+        if (random.nextFloat() > 0.7 || currentIntDepth >= MAX_INT_TERM_DEPTH) {
+            currentIntDepth++
+            ret = generateSimplifiedLiteralExpression(random.nextBoolean(), IntNode::class, st)
+            currentIntDepth--
         } else {
-            generateSimplifiedTerm(IntNode::class, st)
+            currentIntDepth++
+            ret = generateSimplifiedTerm(IntNode::class, st)
+            currentIntDepth--
         }
+        return ret
     }
 
     fun generateSimplifiedLiteralExpression(

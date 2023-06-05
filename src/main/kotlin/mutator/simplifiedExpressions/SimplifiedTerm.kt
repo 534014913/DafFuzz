@@ -1,6 +1,9 @@
 package mutator.simplifiedExpressions
 
 import ast.expressions.*
+import ast.primaryExpressions.ParensExpression
+import ast.primaryExpressions.PrimaryExpressionWithSuffix
+import ast.primaryExpressions.TupleArgs
 import java.math.BigInteger
 
 class SimplifiedTerm(
@@ -39,9 +42,24 @@ class SimplifiedTerm(
                 lhs.divide(rhs).toString()
             }
 
-            BinaryOperator.MOD -> lhs.mod(rhs).toString()
+            BinaryOperator.MOD -> {
+                if (rhs == BigInteger("0")) {
+                    rhs = BigInteger("1")
+                }
+                lhs.mod(rhs).toString()
+            }
+
             else -> throw RuntimeException("${op.toDafny()} is not supported in getting canonical form")
         }
+    }
+
+    override fun toAsExpression(): AsExpression {
+        val dafnyExpr = toDafnyExpression()
+        val tupleArgs = TupleArgs(listOf(dafnyExpr))
+        val parens = ParensExpression(tupleArgs)
+        val primaryExpressionWithSuffix = PrimaryExpressionWithSuffix(parens, emptyList())
+        val unary = UnaryExpression(null, null, isPrimary = true, primaryExpressionWithSuffix)
+        return AsExpression(unary, emptyList(), emptyList())
     }
 
     override fun toRelationalExpression(): RelationalExpression {
