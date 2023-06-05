@@ -1,5 +1,7 @@
 package astGenerator
 
+import ast.statements.AssertStatement
+import ast.statements.AssumeStatement
 import ast.statements.DafnyStatement
 import ast.symbolTable.SymbolTable
 import utils.IRandom
@@ -9,10 +11,10 @@ class SimplifiedAstGenerator(expressionGenerator: ExpressionGenerator, rand: IRa
 
 
     override fun genAssertStatement(result: Boolean, st: SymbolTable): DafnyStatement {
-        TODO("Not yet implemented")
+        return AssertStatement(expressionGenerator.generateBooleanDafnyExpression(result, st), st).wrapToDafnyStatement()
     }
 
     override fun genAssumeStatement(result: Boolean, st: SymbolTable): DafnyStatement {
-        TODO("Not yet implemented")
+        return AssumeStatement(expressionGenerator.generateBooleanDafnyExpression(result, st), st).wrapToDafnyStatement()
     }
 }

@@ -7,6 +7,7 @@ class DafnyWalker(
 ) {
     lateinit var topST: SymbolTable
     fun walkDafny(dafny: Dafny) {
+        dafny.walked = true
         val st = SymbolTable(null)
         topST = st
         SymbolTable.topLevelST = st

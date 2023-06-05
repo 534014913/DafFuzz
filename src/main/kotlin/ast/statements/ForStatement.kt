@@ -24,6 +24,6 @@ data class ForStatement(
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
-        throw RuntimeException("for statement is not walked as it should not exist at after parsing dafny")
+        block.walk(st, walker)
     }
 }

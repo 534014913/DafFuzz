@@ -1,14 +1,16 @@
 package mutator
 
-import ast.statements.BlockStatement
 import ast.Dafny
+import ast.statements.BlockStatement
 import ast.statements.DafnyStatement
 import utils.IRandom
 import utils.UnableToFindOriginalException
 
 class SemanticPreservingMutator(
+    mutationRepetition: Int,
     rand: IRandom
 ) : AbstractMutator(
+    mutationRepetition,
     rand
 ) {
     override fun mutateDafny(dafny: Dafny): Dafny {

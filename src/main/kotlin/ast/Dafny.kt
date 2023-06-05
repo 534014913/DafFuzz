@@ -8,7 +8,8 @@ data class Dafny(
     val includes: List<IncludeDirective>,
     var toplevels: List<TopDeclaration>,
     var pruned: MutableList<DafnyStatement> = mutableListOf(),
-    val changeHistory: MutableList<String> = mutableListOf()
+    val changeHistory: MutableList<String> = mutableListOf(),
+    var walked: Boolean = false
 ) : CloneableASTNode, WalkableNode {
     override fun toDafny(): String {
         return includes.joinToString("\n") { x -> x.toDafny() } +
@@ -27,5 +28,9 @@ data class Dafny(
         for (toplevel in toplevels) {
             toplevel.walk(st, walker)
         }
+    }
+
+    fun setWalked() {
+        walked = true
     }
 }

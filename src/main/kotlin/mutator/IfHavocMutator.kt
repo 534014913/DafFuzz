@@ -8,7 +8,9 @@ import walker.DafnyWalker
 
 class IfHavocMutator(
     val repeatTimes: Int,
-    rand: IRandom): AbstractMutator(rand) {
+    mutationRepetition: Int,
+    rand: IRandom
+) : AbstractMutator(mutationRepetition, rand) {
     override fun mutateDafny(dafny: Dafny): Dafny {
         val dafnyClone = dafny.clone()
         val walker = DafnyWalker()
