@@ -1,7 +1,7 @@
 
 import antlr.DafnyLexer
 import antlr.DafnyParser
-import mutator.SemanticPreservingMutator
+import mutator.AssertMutator
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import utils.IRandom
@@ -127,7 +127,11 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
     tmp.writeText(dafnyAst.toDafny())
 
 //    println(runner.runDafny(tmp, File(WORKING_DIR), "run", "/functionSyntax:3"))
-    val res: String = runner.runDafny(tmp, File(WORKING_DIR), "/timeLimit:$TIME_LIMIT /functionSyntax:3 /compile:3") ?: throw Exception()
+    val res: String = runner.runDafny(
+        tmp,
+        File(WORKING_DIR),
+        "/timeLimit:$TIME_LIMIT /functionSyntax:3 /compile:3"
+    ) ?: throw Exception()
 //    if (res.first(Error))
     println(res)
     if (res.contains("time out".toRegex())) {
@@ -153,10 +157,12 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
     val upSet = upList.toSet()
     assignLivenessToBlocks(dafnyAst, upSet)
     isLivenessAssigned = true
-//    val pruneMutator = PruneMutator(upSet, 4, false, rand)
+//    val pruneMutator = PruneMutator(3,  1, rand)
 //    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
-    val semanticPreservingMutator = SemanticPreservingMutator(DEFAULT_MUTATION_REPETITION, rand)
-    val mutated = semanticPreservingMutator.genMutants(dafnyAst, MUTANT_NUM)
+//    val semanticPreservingMutator = SemanticPreservingMutator(DEFAULT_MUTATION_REPETITION, rand)
+//    val mutated = semanticPreservingMutator.genMutants(dafnyAst, MUTANT_NUM)
+    val assertMutator = AssertMutator(1, 3, 0, rand)
+    val mutated = assertMutator.genMutants(dafnyAst, MUTANT_NUM)
 
 //    val pruned = prune(dafnyAst, upSet)
     var i = 1
@@ -175,7 +181,8 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         prunedFile.writeText(mutant.toDafny())
 
         val pruneResult =
-            runner.runDafny(prunedFile, File(WORKING_DIR), "/functionSyntax:3 /compile:1") ?: throw Exception()
+            runner.runDafny(prunedFile, File(WORKING_DIR), "/functionSyntax:3 /compile:1")
+                ?: throw Exception()
 //    println("-----------------prune result---------------------")
         println("----prune result----")
         println(pruneResult)
