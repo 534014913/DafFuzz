@@ -9,7 +9,7 @@ import utils.IRandom
 
 // IDEA: add 1 random "assert false" to a live block and B add multiple assert/assume false to dead block
 class AssertMutator(
-    val falseAsserts: Int,
+    val trueAsserts: Int,
     val falseAssertsAssumes: Int,
     val generator: AstGenerator,
     mutationRepetition: Int,
@@ -22,8 +22,8 @@ class AssertMutator(
         val deadBlocks = findBlockInjectionPoints(dafnyClone, findLive = false)
         val liveBlocks = findBlockInjectionPoints(dafnyClone, findLive = true)
 
-        repeat(falseAsserts) {
-            insertFalseAssertsToLive(liveBlocks)
+        repeat(trueAsserts) {
+            insertTrueAssertsToLive(liveBlocks)
         }
 
         repeat(falseAssertsAssumes) {
@@ -68,7 +68,7 @@ class AssertMutator(
         return list
     }
 
-    private fun insertFalseAssertsToLive(lives: List<BlockInjectionPoint>) {
+    private fun insertTrueAssertsToLive(lives: List<BlockInjectionPoint>) {
         val randomPoint = lives[rand.nextInt(lives.size)]
         val assertStmt = generator.genAssertStatement(true, randomPoint.symbolTable)
         randomPoint.inject(assertStmt)

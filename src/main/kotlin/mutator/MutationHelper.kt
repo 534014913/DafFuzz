@@ -1,5 +1,6 @@
 package mutator
 
+import LABEL_NUM
 import ast.statements.*
 import astGenerator.SimplifiedExpressionGenerator
 import astGenerator.genVarDeclWithoutRhs
@@ -83,14 +84,21 @@ class MutationHelper(
     }
 
     private fun wrapStmtsWithIfHavoc(statements: List<DafnyStatement>): DafnyStatement {
-        val thenClause = semanticPreservingMutation(statements)
-        val elseClause = ElseSubStatement(semanticPreservingMutation(statements))
+        val updatedStatements = statements.map {
+            if (it.nonLabelStmt is VariableDeclarationStatement) DafnyStatement(
+                null,
+                it.nonLabelStmt.transformToUpdate(),
+                it.nonLabelStmt.stmtSymbolTable
+            ) else it
+        }
+        val thenClause = semanticPreservingMutation(updatedStatements)
+        val elseClause = ElseSubStatement(semanticPreservingMutation(updatedStatements))
         val ifStmt = IfStatement(null, thenClause, elseClause, isHavoc = true)
         return DafnyStatement(null, ifStmt)
     }
 
     private fun semanticPreservingMutation(statements: List<DafnyStatement>): BlockStatement {
-        return BlockStatement(statements.toMutableList(), 99)
+        return BlockStatement(statements.toMutableList(), 9999)
     }
 
     fun mutateOneStmtToFor(mutBlock: MutationSubBlock) {
@@ -136,6 +144,31 @@ class MutationHelper(
         changeToUpdateStatement(parent, statements)
     }
 
+    fun mutateArbitraryStmtToLabeledBreak(mutBlock: MutationSubBlock) {
+        val (index, arity, statements, parent) = mutBlock
+        val stmtsInBlock = parent.statements
+        for(stmt in statements) {
+            pruned.add(stmt)
+            stmtsInBlock.removeAt(index)
+        }
+        stmtsInBlock.add(index, wrapStatementWithLabel(statements))
+        for (stmt in statements.reversed()) {
+            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
+        }
+    }
+
+    private fun wrapStatementWithLabel(statements: List<DafnyStatement>): DafnyStatement {
+        LABEL_NUM++
+        val updatedStatements = statements.map {
+            if (it.nonLabelStmt is VariableDeclarationStatement) DafnyStatement(
+                null,
+                it.nonLabelStmt.transformToUpdate(),
+                it.nonLabelStmt.stmtSymbolTable
+            ) else it
+        }
+        return DafnyStatement(label = "label_$LABEL_NUM", BlockStatement(updatedStatements.toMutableList(), 9999), statements[0].stmtSymbolTable)
+    }
+
     private fun wrapStmtsWithIf(
         statements: List<DafnyStatement>,
     ): DafnyStatement {
@@ -151,13 +184,13 @@ class MutationHelper(
             //true
             val guard = naive.generateBooleanSimplifiedExpression(true, st).toDafnyExpression()
             val ifStmt =
-                IfStatement(guard, BlockStatement(updatedStatements.toMutableList(), 99), null)
+                IfStatement(guard, BlockStatement(updatedStatements.toMutableList(), 9999), null)
             mutated.add("Changed to ${ifStmt.toDafny()}")
             ifStmt
         } else {
             val guard = naive.generateBooleanSimplifiedExpression(false, st).toDafnyExpression()
-            val elseBlock = ElseSubStatement(BlockStatement(updatedStatements.toMutableList(), 99))
-            val ifStmt = IfStatement(guard, BlockStatement(mutableListOf(), 99), elseBlock)
+            val elseBlock = ElseSubStatement(BlockStatement(updatedStatements.toMutableList(), 9999))
+            val ifStmt = IfStatement(guard, BlockStatement(mutableListOf(), 9999), elseBlock)
             mutated.add("Changed to ${ifStmt.toDafny()}")
             ifStmt
         }
@@ -165,7 +198,7 @@ class MutationHelper(
     }
 
     private fun wrapStmtsWithFor(statements: List<DafnyStatement>): DafnyStatement {
-        val blockInFor = BlockStatement(statements.toMutableList(), 99)
+        val blockInFor = BlockStatement(statements.toMutableList(), 9999)
         val isTo = rand.nextBoolean()
         val left = if (isTo) 0 else 1
         val right = if (isTo) 1 else 0

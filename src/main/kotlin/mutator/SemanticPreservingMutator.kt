@@ -29,6 +29,7 @@ class SemanticPreservingMutator(
             mutationSelector::selectThreeVarDeclStmt
         )
         val location = possibleLocations[rand.nextInt(possibleLocations.size)]
+
         try {
 //            println("-------------location---------------")
 //            println(location.toDafny())
@@ -37,26 +38,17 @@ class SemanticPreservingMutator(
                 possibleSelectionFunctions[randIndex]
             println("MUTATION function: $selectionFunction")
             val mutationBlock = selectionFunction(location)
-            val mutationToIf = rand.nextBoolean()
+            val mutationList = listOf(
+                mutationHelper::mutateArbitraryStmtToIf,
+                mutationHelper::mutateArbitraryStmtToLabeledBreak,
+                mutationHelper::mutateArbitraryStmtToFor,
+                mutationHelper::mutateArbitraryStmtToIfHavoc,
+            )
 
-            when (mutationBlock.arity) {
-                1 -> if (mutationToIf) mutationHelper.mutateOneStmtToIf(mutationBlock)
-                else mutationHelper.mutateOneStmtToFor(
-                    mutationBlock
-                )
+            val mutationFunction = mutationList[rand.nextInt(mutationList.size)]
 
-                2 -> if (mutationToIf) mutationHelper.mutateTwoStmtToIf(mutationBlock)
-                else mutationHelper.mutateTwoStmtToFor(
-                    mutationBlock
-                )
+            mutationFunction(mutationBlock)
 
-                3 -> if (mutationToIf) mutationHelper.mutateThreeStmtToIf(mutationBlock)
-                else mutationHelper.mutateThreeStmtToFor(
-                    mutationBlock
-                )
-
-                else -> throw RuntimeException("Max arity is 3, not ${mutationBlock.arity}")
-            }
         } catch (e: UnableToFindOriginalException) {
             println("selected an original program segment that is not suitable for mutation, trying next selection...")
             return dafnyClone
