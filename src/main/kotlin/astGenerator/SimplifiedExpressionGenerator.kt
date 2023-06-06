@@ -1,4 +1,8 @@
-//selectionRandomExprByWeight() modified from the rustsmith project with the following liscence information
+//
+//
+//selectionRandomExprByWeight() modified from the rustsmith project with the following licence information
+//
+//
 //BSD 3-Clause License
 //
 //Copyright (c) 2020, The RustSmith Project
@@ -266,7 +270,8 @@ class SimplifiedExpressionGenerator(
             val map: Map<SimplifiedImpliesExpression, Int> = mapOf(
                 SimplifiedImpliesExpression(trueExprOne, trueExprTwo, truthValue) to 10,
                 SimplifiedImpliesExpression(falseExprOne, trueExprOne, truthValue) to 10,
-                SimplifiedImpliesExpression(falseExprOne, trueExprTwo, truthValue) to 10
+                SimplifiedImpliesExpression(falseExprTwo, trueExprOne, truthValue) to 10,
+                SimplifiedImpliesExpression(falseExprOne, falseExprTwo, truthValue) to 10
             )
             selectRandomByWeightHelper(map)
         } else {
@@ -284,7 +289,7 @@ class SimplifiedExpressionGenerator(
         val falseExprOne = generateSimplifiedLogicalExpression(false, st)
         val falseExprTwo = generateSimplifiedLogicalExpression(false, st)
         return if (truthValue) {
-            // T <== T, F <== T, F <== F
+            // T <== T, T <== F, F <== F
             val map: Map<SimplifiedExpliesExpression, Int> = mapOf(
                 SimplifiedExpliesExpression(
                     trueExprOne as SimplifiedLogicalExpression,
@@ -292,8 +297,8 @@ class SimplifiedExpressionGenerator(
                     truthValue
                 ) to 10,
                 SimplifiedExpliesExpression(
-                    falseExprOne as SimplifiedLogicalExpression,
                     trueExprOne as SimplifiedLogicalExpression,
+                    falseExprOne as SimplifiedLogicalExpression,
                     truthValue
                 ) to 10,
                 SimplifiedExpliesExpression(
@@ -427,13 +432,18 @@ class SimplifiedExpressionGenerator(
 
         val bigLhs = BigInteger(lhs.getCanonicalForm())
         val bigRhs = BigInteger(rhs.getCanonicalForm())
+//        println("IN LESS EXPR:")
+//        println(lhs.getCanonicalForm())
+//        println(bigLhs.toString())
+//        println(rhs.getCanonicalForm())
+//        println(bigRhs.toString())
         assert(bigLhs != bigRhs)
         if (bigLhs > bigRhs) {
             val t = lhs
             lhs = rhs
             rhs = t
         }
-        return if (truthValue) {
+        val ret = if (truthValue) {
             SimplifiedRelationalExpression(
                 lhs,
                 RelationalOperator.LESSEQ,
@@ -448,6 +458,8 @@ class SimplifiedExpressionGenerator(
                 false
             )
         }
+//        println(ret.toDafnyExpression().toDafny())
+        return ret
     }
 
     private fun generateSimplifiedRelationalGreaterEqExpression(
@@ -459,7 +471,6 @@ class SimplifiedExpressionGenerator(
 
         val bigLhs = BigInteger(lhs.getCanonicalForm())
         val bigRhs = BigInteger(rhs.getCanonicalForm())
-        assert(bigLhs != bigRhs)
         if (bigLhs < bigRhs) {
             val t = lhs
             lhs = rhs
@@ -571,6 +582,7 @@ class SimplifiedExpressionGenerator(
             while (lhs.getCanonicalForm() == rhs.getCanonicalForm()) {
                 rhs = generateSimplifiedTerm(type, st)
             }
+            assert(lhs.getCanonicalForm() != rhs.getCanonicalForm())
             SimplifiedRelationalExpression(
                 lhs,
                 RelationalOperator.NOTEQ,
@@ -661,9 +673,9 @@ class SimplifiedExpressionGenerator(
         st: SymbolTable
     ): SimplifiedExpression {
         if (random.nextFloat() <= 0.3) {
-            val varList = st.getVariablesOfType(type)
+            var varList = st.getVariablesOfType(type)
             if (type == BoolNode::class) {
-                varList.filter { it.second == truthValue.toString() }
+                varList = varList.filter { it.second == truthValue.toString() }
             }
             if (varList.isNotEmpty()) {
                 val (ident, value) = varList[random.nextInt(varList.size)]
@@ -674,6 +686,9 @@ class SimplifiedExpressionGenerator(
                     StringNode::class -> StringNode()
                     else -> throw RuntimeException()
                 }
+//                if (ident == "lift_75") {
+//                    println("LIFT_75 has value: $value")
+//                }
                 return generateSimplifiedNameSegment(ident, value, typeNode)
             }
         }
@@ -699,7 +714,7 @@ class SimplifiedExpressionGenerator(
     }
 
     private fun generateIntegerLiteral(): SimplifiedExpression {
-        return SimplifiedIntegerLiteral(BigInteger(random.nextInt(10000000).toString()))
+        return SimplifiedIntegerLiteral(BigInteger(random.nextInt(100000).toString()))
     }
 
     private fun generateBooleanLiteral(truthValue: Boolean): SimplifiedExpression {

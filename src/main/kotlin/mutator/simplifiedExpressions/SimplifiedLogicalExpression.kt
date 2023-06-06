@@ -43,6 +43,8 @@ class SimplifiedLogicalExpression(
         if (truthValueUnder == null) {
             if (op == LogicalOperator.AND_OP) {
                 truthValueUnder = exprLhs.getTruthValue()!! && exprRhs.getTruthValue()!!
+            } else {
+                truthValueUnder = exprLhs.getTruthValue()!! || exprRhs.getTruthValue()!!
             }
         }
         return truthValueUnder

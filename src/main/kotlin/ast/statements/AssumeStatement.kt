@@ -9,7 +9,7 @@ data class AssumeStatement(
     override var stmtSymbolTable: SymbolTable? = null
 ) : StatementNode {
     override fun toDafny(): String {
-        return "assume ${expression.toDafny()};"
+        return "assume {:axiom} ${expression.toDafny()};"
     }
 
     override fun clone(): StatementNode {

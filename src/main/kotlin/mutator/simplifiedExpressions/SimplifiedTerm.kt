@@ -9,7 +9,7 @@ import java.math.BigInteger
 class SimplifiedTerm(
     val exprLhs: SimplifiedExpression,
     val op: BinaryOperator,
-    val exprRhs: SimplifiedExpression
+    var exprRhs: SimplifiedExpression
 ) : SimplifiedExpression {
     override fun toTerm(): Term {
         return Term(
@@ -30,7 +30,7 @@ class SimplifiedTerm(
 
     override fun getCanonicalForm(): String {
         val lhs = BigInteger(exprLhs.getCanonicalForm())
-        var rhs = BigInteger(exprLhs.getCanonicalForm())
+        var rhs = BigInteger(exprRhs.getCanonicalForm())
         return when (op) {
             BinaryOperator.ADD -> lhs.add(rhs).toString()
             BinaryOperator.SUB -> lhs.subtract(rhs).toString()
@@ -38,6 +38,7 @@ class SimplifiedTerm(
             BinaryOperator.DIV -> {
                 if (rhs == BigInteger("0")) {
                     rhs = BigInteger("1")
+                    exprRhs = SimplifiedIntegerLiteral(rhs)
                 }
                 lhs.divide(rhs).toString()
             }
@@ -45,6 +46,7 @@ class SimplifiedTerm(
             BinaryOperator.MOD -> {
                 if (rhs == BigInteger("0") || rhs.signum() <= 0) {
                     rhs = BigInteger("1")
+                    exprRhs = SimplifiedIntegerLiteral(rhs)
                 }
                 lhs.mod(rhs).toString()
             }
@@ -93,5 +95,9 @@ class SimplifiedTerm(
 
     override fun toDafnyExpression(): DafnyExpression {
         return DafnyExpression(listOf(toImpliesExpliesExpression()), null)
+    }
+
+    override fun toString(): String {
+        return "${exprLhs.getCanonicalForm()} ${op.toDafny()}  ${exprRhs.getCanonicalForm()}"
     }
 }

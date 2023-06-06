@@ -26,4 +26,8 @@ class SimplifiedIntegerLiteral(
     override fun getCanonicalForm(): String {
         return value.toString()
     }
+
+    override fun toString(): String {
+        return getCanonicalForm()
+    }
 }

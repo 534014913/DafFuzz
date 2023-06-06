@@ -2,7 +2,8 @@ package mutator
 
 import ast.Dafny
 import ast.statements.BlockStatement
-import astGenerator.AstGenerator
+import astGenerator.SimplifiedAstGenerator
+import astGenerator.SimplifiedExpressionGenerator
 import isLivenessAssigned
 import mutator.injectionPoint.BlockInjectionPoint
 import utils.IRandom
@@ -11,38 +12,43 @@ import utils.IRandom
 class AssertMutator(
     val trueAsserts: Int,
     val falseAssertsAssumes: Int,
-    val generator: AstGenerator,
     mutationRepetition: Int,
     rand: IRandom
 ) : AbstractMutator(mutationRepetition, rand) {
-
+    val generator = SimplifiedAstGenerator(SimplifiedExpressionGenerator(rand), rand)
     override fun mutateDafny(dafny: Dafny): Dafny {
-        val dafnyClone = dafny.clone()
         assert(isLivenessAssigned)
-        val deadBlocks = findBlockInjectionPoints(dafnyClone, findLive = false)
-        val liveBlocks = findBlockInjectionPoints(dafnyClone, findLive = true)
+        val liveBlocks = findBlockInjectionPoints(dafny, findLive = true)
+        val deadBlocks = findBlockInjectionPoints(dafny, findLive = false)
 
         repeat(trueAsserts) {
-            insertTrueAssertsToLive(liveBlocks)
+            insertTrueAssertsToLive(dafny.changeHistory, liveBlocks)
         }
 
         repeat(falseAssertsAssumes) {
-            insertFalseAssertsAssumesToDead(deadBlocks)
+            insertFalseAssertsAssumesToDead(dafny.changeHistory, deadBlocks)
         }
-        return dafnyClone
+        return dafny
     }
 
-    private fun findBlockInjectionPoints(dafny: Dafny, findLive: Boolean): List<BlockInjectionPoint> {
+    private fun findBlockInjectionPoints(
+        dafny: Dafny,
+        findLive: Boolean
+    ): List<BlockInjectionPoint> {
         val methods = dafny.toplevels
-        val injectionPoint = mutableListOf<BlockInjectionPoint>()
+        val injectionPoints = mutableListOf<BlockInjectionPoint>()
         for (method in methods) {
             val member = method.classMember
             //TODO: function not considered at the moment
             if (member.isMethod) {
-                addInjectionPoints(member.method!!.blockStatement, injectionPoint, findLive = findLive)
+                addInjectionPoints(
+                    member.method!!.blockStatement,
+                    injectionPoints,
+                    findLive = findLive
+                )
             }
         }
-        return injectionPoint
+        return injectionPoints
     }
 
     private fun addInjectionPoints(
@@ -63,24 +69,27 @@ class AssertMutator(
     }
 
     private fun generateAllInjectionPoints(block: BlockStatement): List<BlockInjectionPoint> {
-        val list = block.statements.map { BlockInjectionPoint(block, it, it.stmtSymbolTable!!) }.toMutableList()
+        val list = block.statements.map { BlockInjectionPoint(block, it, it.stmtSymbolTable!!) }
+            .toMutableList()
         list.add(BlockInjectionPoint(block, null, block.stmtSymbolTable!!))
         return list
     }
 
-    private fun insertTrueAssertsToLive(lives: List<BlockInjectionPoint>) {
+    private fun insertTrueAssertsToLive(changeHistory: MutableList<String>,lives: List<BlockInjectionPoint>) {
         val randomPoint = lives[rand.nextInt(lives.size)]
         val assertStmt = generator.genAssertStatement(true, randomPoint.symbolTable)
+        changeHistory.add("Inserted true assert to Live: " + assertStmt.toDafny())
         randomPoint.inject(assertStmt)
     }
 
-    private fun insertFalseAssertsAssumesToDead(deads: List<BlockInjectionPoint>) {
+    private fun insertFalseAssertsAssumesToDead(changeHistory: MutableList<String>, deads: List<BlockInjectionPoint>) {
         val randomPoint = deads[rand.nextInt(deads.size)]
         val statement = if (rand.nextBoolean()) {
             generator.genAssertStatement(false, randomPoint.symbolTable)
         } else {
             generator.genAssumeStatement(false, randomPoint.symbolTable)
         }
+        changeHistory.add("Inserted false assert/assume to Dead: " + statement.toDafny())
         randomPoint.inject(statement)
     }
 }
