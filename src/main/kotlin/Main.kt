@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import utils.IRandom
 import utils.RandomWrapper
+import utils.assignLivenessToBlocks
 import walker.DafnyWalker
 import java.io.File
 import java.io.FileInputStream
@@ -21,6 +22,11 @@ const val seed = 523460
 val rand: IRandom = RandomWrapper(seed)
 const val MUTANT_NUM = 10
 const val TIME_LIMIT = 60
+const val DEFAULT_MUTATION_REPETITION = 10
+
+var LABEL_NUM = 0
+
+var isLivenessAssigned = false
 
 fun main(args: Array<String>) {
     if (args[0] == "directory") {
@@ -102,9 +108,10 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
 
     val dafnyAst = DafnyVisitor.makeAST(parserTree)
 
-//    val st = SymbolTable(null,)
     val walker = DafnyWalker()
     walker.walkDafny(dafnyAst)
+    assert(dafnyAst.walked)
+
 //    val method = dafnyAst.toplevels[1].classMember.method!!
 //    for (stmt in method.blockStatement.statements) {
 //        println(stmt.stmtSymbolTable)
@@ -144,9 +151,11 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         }
     }
     val upSet = upList.toSet()
+    assignLivenessToBlocks(dafnyAst, upSet)
+    isLivenessAssigned = true
 //    val pruneMutator = PruneMutator(upSet, 4, false, rand)
 //    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
-    val semanticPreservingMutator = SemanticPreservingMutator(rand)
+    val semanticPreservingMutator = SemanticPreservingMutator(DEFAULT_MUTATION_REPETITION, rand)
     val mutated = semanticPreservingMutator.genMutants(dafnyAst, MUTANT_NUM)
 
 //    val pruned = prune(dafnyAst, upSet)
@@ -188,4 +197,6 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
     }
 
 }
+
+
 

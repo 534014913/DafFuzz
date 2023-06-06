@@ -6,6 +6,7 @@ import ast.statements.VariableDeclarationStatement
 import utils.IRandom
 import utils.UnableToFindOriginalException
 
+const val MAX_ARITY = 3
 class MutationSelector(
     val rand: IRandom
 ) {
@@ -102,6 +103,23 @@ class MutationSelector(
 
         val selectedList = possibleOriginals[rand.nextInt(possibleOriginals.size)]
         return MutationSubBlock(selectedList[0].first, selectedList.size, selectedList.map {it.second}, block)
+    }
+
+    fun selectRandomStmt(block: BlockStatement): MutationSubBlock {
+        var arity = rand.nextInt(1, MAX_ARITY)
+        val originalsList = mutableListOf<Pair<Int, DafnyStatement>>()
+        for (i in block.statements.indices) {
+            val dafnyStatement = block.statements[i]
+            originalsList.add(Pair(i, dafnyStatement))
+        }
+        if (originalsList.size < arity) {
+            throw UnableToFindOriginalException()
+        }
+        val startPos = rand.nextInt(0, originalsList.size - arity)
+        val selectedPairsStmt = originalsList.subList(startPos, startPos + arity)
+        val index = selectedPairsStmt[0].first
+        val statementsToMutate = selectedPairsStmt.map { it.second }
+        return MutationSubBlock(index, arity, statementsToMutate, block)
     }
 
 

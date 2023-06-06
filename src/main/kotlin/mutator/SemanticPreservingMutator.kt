@@ -26,7 +26,8 @@ class SemanticPreservingMutator(
         val possibleSelectionFunctions = listOf(
             mutationSelector::selectOneVarDeclStmt,
             mutationSelector::selectTwoVarDeclStmt,
-            mutationSelector::selectThreeVarDeclStmt
+            mutationSelector::selectThreeVarDeclStmt,
+            mutationSelector::selectRandomStmt
         )
         val location = possibleLocations[rand.nextInt(possibleLocations.size)]
 
@@ -37,6 +38,7 @@ class SemanticPreservingMutator(
             val selectionFunction =
                 possibleSelectionFunctions[randIndex]
             println("MUTATION function: $selectionFunction")
+            
             val mutationBlock = selectionFunction(location)
             val mutationList = listOf(
                 mutationHelper::mutateArbitraryStmtToIf,

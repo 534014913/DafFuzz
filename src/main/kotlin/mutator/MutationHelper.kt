@@ -13,48 +13,7 @@ class MutationHelper(
     val rand: IRandom,
 ) {
     val naive = SimplifiedExpressionGenerator(rand)
-    fun mutateOneStmtToIf(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
-        assert(arity == 1 && statements.size == 1)
-        val stmtsInBlock = parent.statements
-        for (stmt in statements) {
-            pruned.add(stmt)
-        }
-        stmtsInBlock.removeAt(index)
-        stmtsInBlock.add(index, wrapStmtsWithIf(statements))
-        stmtsInBlock.add(
-            index,
-            genVarDeclWithoutRhs(parent.stmtSymbolTable!!, statements[0], mutated)
-        )
-    }
 
-    fun mutateTwoStmtToIf(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
-        assert(arity == 2 && statements.size == arity)
-        val stmtsInBlock = parent.statements
-        for (stmt in statements) {
-            pruned.add(stmt)
-            stmtsInBlock.removeAt(index)
-        }
-        stmtsInBlock.add(index, wrapStmtsWithIf(statements))
-        for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
-        }
-    }
-
-    fun mutateThreeStmtToIf(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
-        assert(arity == 3 && statements.size == arity)
-        val stmtsInBlock = parent.statements
-        for (stmt in statements) {
-            pruned.add(stmt)
-            stmtsInBlock.removeAt(index)
-        }
-        stmtsInBlock.add(index, wrapStmtsWithIf(statements))
-        for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
-        }
-    }
 
     fun mutateArbitraryStmtToIf(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
@@ -65,7 +24,12 @@ class MutationHelper(
         }
         stmtsInBlock.add(index, wrapStmtsWithIf(statements))
         for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
+            if (stmt.nonLabelStmt is VariableDeclarationStatement) {
+                stmtsInBlock.add(
+                    index,
+                    genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated)
+                )
+            }
         }
     }
 
@@ -79,7 +43,12 @@ class MutationHelper(
 
         stmtsInBlock.add(index, wrapStmtsWithIfHavoc(statements))
         for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
+            if (stmt.nonLabelStmt is VariableDeclarationStatement) {
+                stmtsInBlock.add(
+                    index,
+                    genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated)
+                )
+            }
         }
     }
 
@@ -101,45 +70,17 @@ class MutationHelper(
         return BlockStatement(statements.toMutableList(), 9999)
     }
 
-    fun mutateOneStmtToFor(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
-        assert(arity == 1 && statements.size == arity)
-        val stmtsInBlock = parent.statements
-        stmtsInBlock.add(index, wrapStmtsWithFor(statements))
-        for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
-        }
-        changeToUpdateStatement(parent, statements)
-    }
-
-    fun mutateTwoStmtToFor(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
-        assert(arity == 2 && statements.size == arity)
-        val stmtsInBlock = parent.statements
-        stmtsInBlock.add(index, wrapStmtsWithFor(statements))
-        for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
-        }
-        changeToUpdateStatement(parent, statements)
-    }
-
-    fun mutateThreeStmtToFor(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
-        assert(arity == 3 && statements.size == arity)
-        val stmtsInBlock = parent.statements
-        stmtsInBlock.add(index, wrapStmtsWithFor(statements))
-        for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
-        }
-        changeToUpdateStatement(parent, statements)
-    }
-
     fun mutateArbitraryStmtToFor(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
         stmtsInBlock.add(index, wrapStmtsWithFor(statements))
         for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
+            if (stmt.nonLabelStmt is VariableDeclarationStatement) {
+                stmtsInBlock.add(
+                    index,
+                    genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated)
+                )
+            }
         }
         changeToUpdateStatement(parent, statements)
     }
@@ -147,13 +88,18 @@ class MutationHelper(
     fun mutateArbitraryStmtToLabeledBreak(mutBlock: MutationSubBlock) {
         val (index, arity, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
-        for(stmt in statements) {
+        for (stmt in statements) {
             pruned.add(stmt)
             stmtsInBlock.removeAt(index)
         }
         stmtsInBlock.add(index, wrapStatementWithLabel(statements))
         for (stmt in statements.reversed()) {
-            stmtsInBlock.add(index, genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated))
+            if (stmt.nonLabelStmt is VariableDeclarationStatement) {
+                stmtsInBlock.add(
+                    index,
+                    genVarDeclWithoutRhs(parent.stmtSymbolTable!!, stmt, mutated)
+                )
+            }
         }
     }
 
@@ -166,7 +112,11 @@ class MutationHelper(
                 it.nonLabelStmt.stmtSymbolTable
             ) else it
         }
-        return DafnyStatement(label = "label_$LABEL_NUM", BlockStatement(updatedStatements.toMutableList(), 9999), statements[0].stmtSymbolTable)
+        return DafnyStatement(
+            label = "label_$LABEL_NUM",
+            BlockStatement(updatedStatements.toMutableList(), 9999),
+            statements[0].stmtSymbolTable
+        )
     }
 
     private fun wrapStmtsWithIf(
@@ -189,7 +139,8 @@ class MutationHelper(
             ifStmt
         } else {
             val guard = naive.generateBooleanSimplifiedExpression(false, st).toDafnyExpression()
-            val elseBlock = ElseSubStatement(BlockStatement(updatedStatements.toMutableList(), 9999))
+            val elseBlock =
+                ElseSubStatement(BlockStatement(updatedStatements.toMutableList(), 9999))
             val ifStmt = IfStatement(guard, BlockStatement(mutableListOf(), 9999), elseBlock)
             mutated.add("Changed to ${ifStmt.toDafny()}")
             ifStmt
@@ -214,14 +165,14 @@ class MutationHelper(
         val pairs: List<Pair<DafnyStatement, BlockInjectionPoint>> =
             statements.zip(statements)
                 .filter { it.first.nonLabelStmt is VariableDeclarationStatement }.map {
-                Pair(
-                    DafnyStatement(
-                        null,
-                        (it.first.nonLabelStmt as VariableDeclarationStatement).transformToUpdate(),
-                        it.first.nonLabelStmt.stmtSymbolTable
-                    ), BlockInjectionPoint(block, it.second, it.second.stmtSymbolTable!!)
-                )
-            }
+                    Pair(
+                        DafnyStatement(
+                            null,
+                            (it.first.nonLabelStmt as VariableDeclarationStatement).transformToUpdate(),
+                            it.first.nonLabelStmt.stmtSymbolTable
+                        ), BlockInjectionPoint(block, it.second, it.second.stmtSymbolTable!!)
+                    )
+                }
         for (pair in pairs) {
             pair.second.replaceNextStmt(pair.first)
         }
