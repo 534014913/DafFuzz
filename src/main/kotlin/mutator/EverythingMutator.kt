@@ -3,10 +3,14 @@ package mutator
 import ast.Dafny
 import utils.IRandom
 
-class EverythingMutator(mutationRepetition: Int, rand: IRandom) :
-    AbstractMutator(mutationRepetition, rand) {
+class EverythingMutator(
+    val mutators: List<AbstractMutator>,
+    mutationRepetition: Int,
+    rand: IRandom
+) : AbstractMutator(mutationRepetition, rand) {
     override fun mutateDafny(dafny: Dafny): Dafny {
-        TODO("Not yet implemented")
+        val mutator = mutators[rand.nextInt(mutators.size)]
+        return mutator.mutateDafny(dafny)
     }
 
 }

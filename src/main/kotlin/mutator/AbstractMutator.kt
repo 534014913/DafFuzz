@@ -25,5 +25,5 @@ abstract class AbstractMutator(
         return res
     }
 
-    protected abstract fun mutateDafny(dafny: Dafny): Dafny
+    abstract fun mutateDafny(dafny: Dafny): Dafny
 }
