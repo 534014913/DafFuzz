@@ -8,7 +8,7 @@ data class BlockStatement(
     val ident: Int,
     var printIdent: Boolean = false,
     override var stmtSymbolTable: SymbolTable? = null,
-    var isLive: Boolean = false
+    var isLive: Boolean = true
 ) : StatementNode {
     override fun toDafny(): String {
 //        val prefix = addTabs()
@@ -58,7 +58,8 @@ data class BlockStatement(
             statements.map { it.clone() }.toMutableList(),
             ident,
             printIdent,
-            stmtSymbolTable?.clone()
+            stmtSymbolTable?.clone(),
+            isLive
         )
     }
 

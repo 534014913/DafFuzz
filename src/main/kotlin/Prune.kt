@@ -1,4 +1,4 @@
-import ast.*
+import ast.Dafny
 import ast.statements.*
 
 fun addInstrumentation(dafny: Dafny) {
@@ -24,26 +24,6 @@ fun addPrint(blockStatement: BlockStatement) {
             else -> continue
         }
     }
-}
-
-fun prune(dafny: Dafny, upBlocks: Set<Int>): Dafny {
-    val newToplevelDecl = mutableListOf<TopDeclaration>()
-    for (topl in dafny.toplevels) {
-        if (!topl.classMember.isMethod) {
-            newToplevelDecl.add(topl.copy())
-        } else {
-            val method = topl.classMember.method
-            val body = method!!.blockStatement
-            val prunedBody = pruneHelperMiddle(body, upBlocks)
-            val newMethod = method.copy(blockStatement = prunedBody)
-            val newTopl = topl.copy()
-            newTopl.classMember.method = newMethod
-            newToplevelDecl.add(newTopl)
-        }
-    }
-    val newDafny = dafny.copy()
-    newDafny.toplevels = newToplevelDecl
-    return newDafny
 }
 
 fun pruneHelperMiddle(stmt: BlockStatement, upBlocks: Set<Int>): BlockStatement {

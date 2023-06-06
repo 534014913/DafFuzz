@@ -75,7 +75,7 @@ class PruneMutator(
             (block.statements.size * PRUNE_STATEMENT_RATIO).toInt() + 2
         )
 //        println(canPrune)
-        println("prune $canPrune statements")
+//        println("prune $canPrune statements")
         repeat(canPrune) {
             val id = rand.nextInt(block.statements.size)
             val s = block.statements[id]

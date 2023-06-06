@@ -15,8 +15,8 @@ fun assignLivenessToBlocks(dafnyAst: Dafny, upSet: Set<Int>) {
 }
 
 private fun assignLivenessToBlockStatement(block: BlockStatement, upSet: Set<Int>) {
-    if (block.ident in upSet) {
-        block.setToLive()
+    if (block.ident !in upSet) {
+        block.setToDead()
     }
     for (ds in block.statements) {
         if (ds.nonLabelStmt is BlockStatement) {
