@@ -71,7 +71,7 @@ class PruneMutator(
 
     private fun pruneStatement(block: BlockStatement, dafnyClone: Dafny) {
         val canPrune = min(
-            rand.nextPositiveInt(pruneNumber),
+            rand.nextInt(0, pruneNumber),
             (block.statements.size * PRUNE_STATEMENT_RATIO).toInt() + 2
         )
 //        println(canPrune)

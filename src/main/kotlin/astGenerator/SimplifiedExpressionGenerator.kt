@@ -153,7 +153,7 @@ val PROB_OPERATOR_MAP: MutableMap<BinaryOperator, Int> = mutableMapOf(
 
 const val MAX_STRING_SIZE = 100
 
-const val MAX_INT_TERM_DEPTH = 3
+const val MAX_TERM_DEPTH = 3
 var currentIntDepth = 0
 
 class SimplifiedExpressionGenerator(
@@ -297,12 +297,12 @@ class SimplifiedExpressionGenerator(
                     truthValue
                 ) to 10,
                 SimplifiedExpliesExpression(
-                    trueExprOne as SimplifiedLogicalExpression,
+                    trueExprOne,
                     falseExprOne as SimplifiedLogicalExpression,
                     truthValue
                 ) to 10,
                 SimplifiedExpliesExpression(
-                    falseExprOne as SimplifiedLogicalExpression,
+                    falseExprOne ,
                     falseExprTwo as SimplifiedLogicalExpression,
                     truthValue
                 ) to 10
@@ -654,8 +654,8 @@ class SimplifiedExpressionGenerator(
     }
 
     private fun generateIntTerm(st: SymbolTable): SimplifiedExpression {
-        var ret: SimplifiedExpression? = null
-        if (random.nextFloat() > 0.7 || currentIntDepth >= MAX_INT_TERM_DEPTH) {
+        val ret: SimplifiedExpression?
+        if (random.nextFloat() > 0.7 || currentIntDepth >= MAX_TERM_DEPTH) {
             currentIntDepth++
             ret = generateSimplifiedLiteralExpression(random.nextBoolean(), IntNode::class, st)
             currentIntDepth--

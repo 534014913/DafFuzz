@@ -1,7 +1,7 @@
 
 import antlr.DafnyLexer
 import antlr.DafnyParser
-import mutator.AssertMutator
+import mutator.PruneMutator
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import utils.IRandom
@@ -15,13 +15,17 @@ import kotlin.system.exitProcess
 const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
 const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
 
-const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
-//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp/"
+//const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
+const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/negative_pruned/"
+
+const val TEST_HARNESS = "/Users/laiyi/ICL/DafFuzz/src/test/negative_pruned_harness/"
+
+const val IS_NEGATIVE = true
 
 const val seed = 523460
 val rand: IRandom = RandomWrapper(seed)
 const val MUTANT_NUM = 10
-const val TIME_LIMIT = 60
+const val TIME_LIMIT = 180
 const val DEFAULT_MUTATION_REPETITION = 10
 
 var LABEL_NUM = 0
@@ -127,11 +131,16 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
     tmp.writeText(dafnyAst.toDafny())
 
 //    println(runner.runDafny(tmp, File(WORKING_DIR), "run", "/functionSyntax:3"))
-    val res: String = runner.runDafny(
-        tmp,
-        File(WORKING_DIR),
-        "/timeLimit:$TIME_LIMIT /functionSyntax:3 /compile:3"
-    ) ?: throw Exception()
+    val res: String
+    try {
+        res = runner.runDafny(
+            tmp,
+            File(WORKING_DIR),
+            "/timeLimit:$TIME_LIMIT /functionSyntax:3 /compile:4"
+        ) ?: throw Exception()
+    } catch (e: Exception) {
+        return
+    }
 //    if (res.first(Error))
     println(res)
     if (res.contains("time out".toRegex())) {
@@ -139,7 +148,7 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         log.appendText("\t" + file.name + " timed out when verifying with z3\n")
         return
     }
-    if (res.contains("Error".toRegex())) {
+    if (!IS_NEGATIVE && res.contains("Error".toRegex())) {
         println("\t" + file.name + " has Error in annotation, aborting...")
         log.appendText("\t" + file.name + " has Error in annotation, aborting...\n")
         return
@@ -155,15 +164,18 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         }
     }
     val upSet = upList.toSet()
+    println("Up set is: " + upSet.toString())
     assignLivenessToBlocks(dafnyAst, upSet)
     isLivenessAssigned = true
-//    val pruneMutator = PruneMutator(3,  1, rand)
-//    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
+    val pruneMutator = PruneMutator(3,  0, rand)
+    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
 //    val semanticPreservingMutator = SemanticPreservingMutator(DEFAULT_MUTATION_REPETITION, rand)
 //    val mutated = semanticPreservingMutator.genMutants(dafnyAst, MUTANT_NUM)
-    val assertMutator = AssertMutator(1, 3, 0, rand)
-    val mutated = assertMutator.genMutants(dafnyAst, MUTANT_NUM)
-
+//    val assertMutator = AssertMutator(1, 3, 0, rand)
+//    val mutated = assertMutator.genMutants(dafnyAst, MUTANT_NUM)
+//    val everythingMutator = EverythingMutator(listOf(pruneMutator, assertMutator, semanticPreservingMutator), 10, rand)
+//    val mutated = everythingMutator.genMutants(dafnyAst, MUTANT_NUM)
+//
 //    val pruned = prune(dafnyAst, upSet)
     var i = 1
     for (mutant in mutated) {
@@ -199,6 +211,10 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         if (verifyAndError.size != 2 || verifyAndError[1] != 0) {
             println("\tERROR in file ${file.absoluteFile}")
             log.appendText("\tERROR in file ${file.absoluteFile}\n")
+        } else {
+            println("Sending to test harness")
+            val harnessFile = File(TEST_HARNESS + "p_" + "$i" + "_" + file.name)
+            harnessFile.writeText(mutant.toDafny())
         }
         i++
     }

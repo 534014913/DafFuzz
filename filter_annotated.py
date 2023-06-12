@@ -1,8 +1,12 @@
 import os
 import shutil
 
-input_path = "/Users/laiyi/ICL/DafFuzz/src/test/annotated"
-output_path = "/Users/laiyi/ICL/DafFuzz/src/test/positive_filtered"
+input_path = "/Users/laiyi/ICL/DafFuzz/src/test/negativeXdsmith"
+output_path = "/Users/laiyi/ICL/DafFuzz/src/test/negative_seeds"
+
+isExist = os.path.exists(output_path)
+if not isExist:
+   os.makedirs(output_path)
 
 for file in os.listdir(input_path):
     if file.endswith(".dfy"):

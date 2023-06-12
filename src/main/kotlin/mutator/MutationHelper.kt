@@ -16,7 +16,7 @@ class MutationHelper(
 
 
     fun mutateArbitraryStmtToIf(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
+        val (index, _, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
         for (stmt in statements) {
             pruned.add(stmt)
@@ -34,7 +34,7 @@ class MutationHelper(
     }
 
     fun mutateArbitraryStmtToIfHavoc(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
+        val (index, _, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
         for (stmt in statements) {
             pruned.add(stmt)
@@ -71,7 +71,7 @@ class MutationHelper(
     }
 
     fun mutateArbitraryStmtToFor(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
+        val (index, _, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
         stmtsInBlock.add(index, wrapStmtsWithFor(statements))
         for (stmt in statements.reversed()) {
@@ -86,7 +86,7 @@ class MutationHelper(
     }
 
     fun mutateArbitraryStmtToLabeledBreak(mutBlock: MutationSubBlock) {
-        val (index, arity, statements, parent) = mutBlock
+        val (index, _, statements, parent) = mutBlock
         val stmtsInBlock = parent.statements
         for (stmt in statements) {
             pruned.add(stmt)
@@ -170,7 +170,7 @@ class MutationHelper(
                             null,
                             (it.first.nonLabelStmt as VariableDeclarationStatement).transformToUpdate(),
                             it.first.nonLabelStmt.stmtSymbolTable
-                        ), BlockInjectionPoint(block, it.second, it.second.stmtSymbolTable!!)
+                        ), BlockInjectionPoint(block, it.second, it.second.stmtSymbolTable)
                     )
                 }
         for (pair in pairs) {

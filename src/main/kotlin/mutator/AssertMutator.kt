@@ -77,7 +77,7 @@ class AssertMutator(
 
     private fun insertTrueAssertsToLive(changeHistory: MutableList<String>,lives: List<BlockInjectionPoint>) {
         val randomPoint = lives[rand.nextInt(lives.size)]
-        val assertStmt = generator.genAssertStatement(true, randomPoint.symbolTable)
+        val assertStmt = generator.genAssertStatement(true, randomPoint.symbolTable!!)
         changeHistory.add("Inserted true assert to Live: " + assertStmt.toDafny())
         randomPoint.inject(assertStmt)
     }
@@ -85,9 +85,9 @@ class AssertMutator(
     private fun insertFalseAssertsAssumesToDead(changeHistory: MutableList<String>, deads: List<BlockInjectionPoint>) {
         val randomPoint = deads[rand.nextInt(deads.size)]
         val statement = if (rand.nextBoolean()) {
-            generator.genAssertStatement(false, randomPoint.symbolTable)
+            generator.genAssertStatement(false, randomPoint.symbolTable!!)
         } else {
-            generator.genAssumeStatement(false, randomPoint.symbolTable)
+            generator.genAssumeStatement(false, randomPoint.symbolTable!!)
         }
         changeHistory.add("Inserted false assert/assume to Dead: " + statement.toDafny())
         randomPoint.inject(statement)

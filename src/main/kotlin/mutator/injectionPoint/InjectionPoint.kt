@@ -19,6 +19,6 @@ package mutator.injectionPoint
 import ast.symbolTable.SymbolTable
 
 abstract class InjectionPoint(
-    val symbolTable: SymbolTable
+    val symbolTable: SymbolTable?
 ): IInjectionPoint {
 }

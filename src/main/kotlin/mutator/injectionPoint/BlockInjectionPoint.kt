@@ -23,7 +23,7 @@ import ast.symbolTable.SymbolTable
 class BlockInjectionPoint(
     val block: BlockStatement,
     val nextStmt: DafnyStatement?,
-    symbolTable: SymbolTable
+    symbolTable: SymbolTable?
 ) : InjectionPoint(
     symbolTable
 ) {

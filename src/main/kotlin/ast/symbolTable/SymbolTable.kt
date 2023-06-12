@@ -48,18 +48,22 @@ data class SymbolTable(
             IntNode::class -> symbolMap.toList().filter { it.second.type is IntNode }
                 .filter { it.second.textRepresentation != null }
                 .filter { !it.second.textRepresentation!!.startsWith("lift") }
+                .filter { !it.second.textRepresentation!!.startsWith("*") }
                 .map { it.first to it.second.textRepresentation!! }
             CharNode::class -> symbolMap.toList().filter { it.second.type is CharNode }
                 .filter { it.second.textRepresentation != null }
                 .filter { !it.second.textRepresentation!!.startsWith("lift") }
+                .filter { !it.second.textRepresentation!!.startsWith("*") }
                 .map { it.first to it.second.textRepresentation!! }
             BoolNode::class -> symbolMap.toList().filter { it.second.type is BoolNode }
                 .filter { it.second.textRepresentation != null }
                 .filter { !it.second.textRepresentation!!.startsWith("lift") }
+                .filter { !it.second.textRepresentation!!.startsWith("*") }
                 .map { it.first to it.second.textRepresentation!! }
             StringNode::class -> symbolMap.toList().filter { it.second.type is StringNode }
                 .filter { it.second.textRepresentation != null }
                 .filter { !it.second.textRepresentation!!.startsWith("lift") }
+                .filter { !it.second.textRepresentation!!.startsWith("*") }
                 .map { it.first to it.second.textRepresentation!! }
 
             else -> throw RuntimeException()

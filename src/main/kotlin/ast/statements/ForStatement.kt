@@ -24,6 +24,7 @@ data class ForStatement(
     }
 
     override fun walk(st: SymbolTable, walker: DafnyWalker) {
+        stmtSymbolTable = st.clone()
         block.walk(st, walker)
     }
 }
