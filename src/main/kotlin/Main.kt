@@ -15,11 +15,11 @@ import java.io.File
 import java.io.FileInputStream
 import kotlin.system.exitProcess
 
-const val DAFNY_PATH = "C:/Users/53401/Desktop/Development/dafny/Binaries/Dafny.exe"
-const val WORKING_DIR = "C:/Users/53401/Desktop/Development/dafny/Binaries"
+const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
+const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
 
 //const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
-const val TMP_DIR = "C:/Users/53401/Desktop/Development/DafFuzz/src/test/negative_everything/"
+const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/negative_pruned/"
 
 const val TEST_HARNESS = "C:/Users/53401/Desktop/Development/DafFuzz/src/test/negative_everything_harness/"
 
@@ -35,7 +35,7 @@ const val seed = 523460
 val rand: IRandom = RandomWrapper(seed)
 const val MUTANT_NUM = 10
 const val TIME_LIMIT = 180
-const val DEFAULT_MUTATION_REPETITION = 10
+const val DEFAULT_MUTATION_REPETITION = 100
 
 var LABEL_NUM = 0
 
@@ -97,6 +97,10 @@ fun processDir(args: Array<String>) {
 
 fun processDafny(file: File, runner: DafnyRunner, log: File) {
     if (!file.isFile) {
+        return
+    }
+    if (!file.name.endsWith("dfy")) {
+        println(file.name)
         return
     }
     println("<=========================== PROCESSING ${file.name} ==================================>")

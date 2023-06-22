@@ -714,7 +714,7 @@ class SimplifiedExpressionGenerator(
     }
 
     private fun generateIntegerLiteral(): SimplifiedExpression {
-        return SimplifiedIntegerLiteral(BigInteger(random.nextInt(100000).toString()))
+        return SimplifiedIntegerLiteral(BigInteger(random.nextInt(1000000000).toString()))
     }
 
     private fun generateBooleanLiteral(truthValue: Boolean): SimplifiedExpression {

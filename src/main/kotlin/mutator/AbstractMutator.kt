@@ -31,7 +31,7 @@ abstract class AbstractMutator(
                 res.add(mutant)
             } else {
                 var currentREpetition = 0
-                while (currentREpetition < rand.nextInt(mutationRepetition).coerceAtLeast(1)) {
+                while (currentREpetition < mutationRepetition) {
                     try {
                         mutant = mutateDafny(mutant)
                         val topLevel = SymbolTable(null)
