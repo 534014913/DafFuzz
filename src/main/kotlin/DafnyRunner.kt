@@ -1,12 +1,13 @@
 
 import java.io.File
+import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 
-class DafnyRunner(private val dafnyPath: String) {
+class DafnyRunner(private val dafnyPath: Path) {
     fun runDafny(file: File, workingDir: File, cmd: String): Pair<Int, String?> {
-        file.copyTo(File("/Users/53401/Desktop/Development/dafny/Binaries/test.dfy"), true)
+//        file.copyTo(File("/Users/laiyi/Development/newDAFNY/dafny/Scripts/test.dfy"), true)
         try {
-            val command = "$dafnyPath $cmd test.dfy"
+            val command = "$dafnyPath $cmd ${file.absolutePath}"
             val parts = command.split("\\s".toRegex())
             val proc = ProcessBuilder(*parts.toTypedArray())
                 .directory(workingDir)
@@ -26,14 +27,14 @@ class DafnyRunner(private val dafnyPath: String) {
 
 }
 
-fun main(args: Array<String>) {
-    val runner = DafnyRunner(DAFNY_PATH)
-//    val file = File("C:/Users/53401/Desktop/Development/dafny/Binaries/test.dfy")
-    val file = File("./test.dfy")
-    val output = runner.runDafny(file, File(WORKING_DIR), "/functionSyntax:3 /compile:4")
-    if (output == null) {
-        println("ERROR IN RUNNER")
-    }
-    print(output)
-}
+//fun main(args: Array<String>) {
+//    val runner = DafnyRunner(DAFNY_PATH)
+////    val file = File("C:/Users/53401/Desktop/Development/dafny/Binaries/test.dfy")
+//    val file = File("./test.dfy")
+//    val output = runner.runDafny(file, File(WORKING_DIR), "/functionSyntax:3 /compile:4")
+//    if (output == null) {
+//        println("ERROR IN RUNNER")
+//    }
+//    print(output)
+//}
 
