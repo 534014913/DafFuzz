@@ -1,7 +1,10 @@
 
 import antlr.DafnyLexer
 import antlr.DafnyParser
+import mutator.AssertMutator
+import mutator.EverythingMutator
 import mutator.PruneMutator
+import mutator.SemanticPreservingMutator
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import utils.IRandom
@@ -12,15 +15,21 @@ import java.io.File
 import java.io.FileInputStream
 import kotlin.system.exitProcess
 
-const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
-const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
+const val DAFNY_PATH = "C:/Users/53401/Desktop/Development/dafny/Binaries/Dafny.exe"
+const val WORKING_DIR = "C:/Users/53401/Desktop/Development/dafny/Binaries"
 
 //const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
-const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/negative_pruned/"
+const val TMP_DIR = "C:/Users/53401/Desktop/Development/DafFuzz/src/test/negative_everything/"
 
-const val TEST_HARNESS = "/Users/laiyi/ICL/DafFuzz/src/test/negative_pruned_harness/"
+const val TEST_HARNESS = "C:/Users/53401/Desktop/Development/DafFuzz/src/test/negative_everything_harness/"
+
+const val COMPILER_HARNESS = "C:/Users/53401/Desktop/Development/DafFuzz/src/test/compiler_harness/"
 
 const val IS_NEGATIVE = true
+
+val compile_targets = listOf("java", "go", "js", "py","dfy")
+
+const val TEST_COMPILERS = false
 
 const val seed = 523460
 val rand: IRandom = RandomWrapper(seed)
@@ -106,8 +115,7 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
 
         println("Lexer/Parser error in the input file")
         log.writeText("Lexer/Parser error in the input file")
-
-        exitProcess(1)
+        return
     }
 
     val dafnyAst = DafnyVisitor.makeAST(parserTree)
@@ -132,23 +140,26 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
 
 //    println(runner.runDafny(tmp, File(WORKING_DIR), "run", "/functionSyntax:3"))
     val res: String
+    val exitCode: Int
     try {
-        res = runner.runDafny(
+        val resultPair = runner.runDafny(
             tmp,
             File(WORKING_DIR),
             "/timeLimit:$TIME_LIMIT /functionSyntax:3 /compile:4"
-        ) ?: throw Exception()
+        )
+        exitCode = resultPair.first
+        res = resultPair.second ?: throw Exception()
     } catch (e: Exception) {
         return
     }
 //    if (res.first(Error))
-    println(res)
+    println("Result: " + res)
     if (res.contains("time out".toRegex())) {
         println("\t" + file.name + " timed out when verifying with z3")
         log.appendText("\t" + file.name + " timed out when verifying with z3\n")
         return
     }
-    if (!IS_NEGATIVE && res.contains("Error".toRegex())) {
+    if (!IS_NEGATIVE && (res.contains("Error".toRegex()) || exitCode != 0)) {
         println("\t" + file.name + " has Error in annotation, aborting...")
         log.appendText("\t" + file.name + " has Error in annotation, aborting...\n")
         return
@@ -168,13 +179,13 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
     assignLivenessToBlocks(dafnyAst, upSet)
     isLivenessAssigned = true
     val pruneMutator = PruneMutator(3,  0, rand)
-    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
-//    val semanticPreservingMutator = SemanticPreservingMutator(DEFAULT_MUTATION_REPETITION, rand)
+//    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
+    val semanticPreservingMutator = SemanticPreservingMutator(DEFAULT_MUTATION_REPETITION, rand)
 //    val mutated = semanticPreservingMutator.genMutants(dafnyAst, MUTANT_NUM)
-//    val assertMutator = AssertMutator(1, 3, 0, rand)
+    val assertMutator = AssertMutator(1, 3, 0, rand)
 //    val mutated = assertMutator.genMutants(dafnyAst, MUTANT_NUM)
-//    val everythingMutator = EverythingMutator(listOf(pruneMutator, assertMutator, semanticPreservingMutator), 10, rand)
-//    val mutated = everythingMutator.genMutants(dafnyAst, MUTANT_NUM)
+    val everythingMutator = EverythingMutator(listOf(pruneMutator, assertMutator, semanticPreservingMutator), 10, rand)
+    val mutated = everythingMutator.genMutants(dafnyAst, MUTANT_NUM)
 //
 //    val pruned = prune(dafnyAst, upSet)
     var i = 1
@@ -192,9 +203,9 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
         val prunedFile = File(TMP_DIR + "p_" + "$i" + "_" + file.name)
         prunedFile.writeText(mutant.toDafny())
 
-        val pruneResult =
+        val (prunedExitCode, pruneResult) =
             runner.runDafny(prunedFile, File(WORKING_DIR), "/functionSyntax:3 /compile:1")
-                ?: throw Exception()
+        if (pruneResult == null) return
 //    println("-----------------prune result---------------------")
         println("----prune result----")
         println(pruneResult)
@@ -208,17 +219,40 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
                 verifyAndError.add(parse)
             }
         }
-        if (verifyAndError.size != 2 || verifyAndError[1] != 0) {
+
+
+        val hasError = if (verifyAndError.size != 2 || verifyAndError[1] != 0 || prunedExitCode != 0) {
             println("\tERROR in file ${file.absoluteFile}")
             log.appendText("\tERROR in file ${file.absoluteFile}\n")
+            true
         } else {
-            println("Sending to test harness")
+            false
+        }
+
+        if (hasError != IS_NEGATIVE) {
             val harnessFile = File(TEST_HARNESS + "p_" + "$i" + "_" + file.name)
             harnessFile.writeText(mutant.toDafny())
+            harnessFile.appendText("\n //Testing with bug found verification error\n")
+            harnessFile.appendText("/*\n")
+            harnessFile.appendText(pruneResult!!)
+            harnessFile.appendText("\n*/\n")
+        }
+
+        if (TEST_COMPILERS) {
+            for (compiler in compile_targets) {
+                val (compileExitCode, compileOutputString) = runner.runDafny(prunedFile, File(WORKING_DIR), "/functionSyntax:3 /noVerify /compileTarget:${compiler}")
+                if (compileExitCode != 0) {
+                    val harnessFileCompile = File(COMPILER_HARNESS + "p_" + "$i" + file.name)
+                    harnessFileCompile.writeText(mutant.toDafny())
+                    harnessFileCompile.appendText("\n //Compiling with $compiler backend\n")
+                    harnessFileCompile.appendText("/*\n")
+                    harnessFileCompile.appendText(compileOutputString!!)
+                    harnessFileCompile.appendText("\n*/\n")
+                }
+            }
         }
         i++
     }
-
 }
 
 

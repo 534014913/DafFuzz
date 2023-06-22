@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 LEXER_FILE=DafnyLexer.g4
 PARSER_FILE=DafnyParser.g4
+JAVA=java && [[ "$OSTYPE" == "linux-gnu"* ]] && JAVA=java.exe
 
 BASEDIR="$(dirname "$0")"
 
@@ -10,7 +11,7 @@ TARGET_DIR=../src/main/kotlin/antlr
 rm -rf $TARGET_DIR
 
 echo Compiling the lexer..
-java -jar "$BASEDIR"/../lib/antlr-4.9.1-complete.jar "$BASEDIR"/"$LEXER_FILE" -o "$TARGET_DIR" -package antlr -no-listener -visitor -Werror
+$JAVA -jar "$BASEDIR"/../lib/antlr-4.9.1-complete.jar "$BASEDIR"/"$LEXER_FILE" -o "$TARGET_DIR" -package antlr -no-listener -visitor -Werror
 
 # shellcheck disable=SC2181
 if [ $? -ne 0 ]
@@ -19,4 +20,4 @@ then
 fi
 
 echo Compiling the parser..
-java -jar "$BASEDIR"/../lib/antlr-4.9.1-complete.jar "$BASEDIR"/"$PARSER_FILE" -o "$TARGET_DIR" -package antlr -no-listener -visitor -Werror
+$JAVA -jar "$BASEDIR"/../lib/antlr-4.9.1-complete.jar "$BASEDIR"/"$PARSER_FILE" -o "$TARGET_DIR" -package antlr -no-listener -visitor -Werror
