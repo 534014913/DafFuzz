@@ -1,7 +1,7 @@
 
 import antlr.DafnyLexer
 import antlr.DafnyParser
-import mutator.PruneMutator
+import mutator.SemanticPreservingMutator
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import utils.IRandom
@@ -16,17 +16,17 @@ const val DAFNY_PATH = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/dafny"
 const val WORKING_DIR = "/Users/laiyi/Development/newDAFNY/dafny/Scripts/"
 
 //const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/tmp_sample/"
-const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/negative_pruned/"
+const val TMP_DIR = "/Users/laiyi/ICL/DafFuzz/src/test/positive_sp/"
 
-const val TEST_HARNESS = "/Users/laiyi/ICL/DafFuzz/src/test/negative_pruned_harness/"
+const val TEST_HARNESS = "/Users/laiyi/ICL/DafFuzz/src/test/positive_sp_harness/"
 
-const val IS_NEGATIVE = true
+const val IS_NEGATIVE = false
 
 const val seed = 523460
 val rand: IRandom = RandomWrapper(seed)
 const val MUTANT_NUM = 10
 const val TIME_LIMIT = 180
-const val DEFAULT_MUTATION_REPETITION = 10
+const val DEFAULT_MUTATION_REPETITION = 100
 
 var LABEL_NUM = 0
 
@@ -88,6 +88,10 @@ fun processDir(args: Array<String>) {
 
 fun processDafny(file: File, runner: DafnyRunner, log: File) {
     if (!file.isFile) {
+        return
+    }
+    if (!file.name.endsWith("dfy")) {
+        println(file.name)
         return
     }
     println("<=========================== PROCESSING ${file.name} ==================================>")
@@ -167,10 +171,10 @@ fun processDafny(file: File, runner: DafnyRunner, log: File) {
     println("Up set is: " + upSet.toString())
     assignLivenessToBlocks(dafnyAst, upSet)
     isLivenessAssigned = true
-    val pruneMutator = PruneMutator(3,  0, rand)
-    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
-//    val semanticPreservingMutator = SemanticPreservingMutator(DEFAULT_MUTATION_REPETITION, rand)
-//    val mutated = semanticPreservingMutator.genMutants(dafnyAst, MUTANT_NUM)
+//    val pruneMutator = PruneMutator(3,  0, rand)
+//    val mutated = pruneMutator.genMutants(dafnyAst, MUTANT_NUM)
+    val semanticPreservingMutator = SemanticPreservingMutator(DEFAULT_MUTATION_REPETITION, rand)
+    val mutated = semanticPreservingMutator.genMutants(dafnyAst, MUTANT_NUM)
 //    val assertMutator = AssertMutator(1, 3, 0, rand)
 //    val mutated = assertMutator.genMutants(dafnyAst, MUTANT_NUM)
 //    val everythingMutator = EverythingMutator(listOf(pruneMutator, assertMutator, semanticPreservingMutator), 10, rand)
