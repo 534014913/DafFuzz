@@ -128,7 +128,10 @@ class DafFuzz : CliktCommand(name = "DafFuzz") {
     override fun run() {
         Files.createDirectories(Paths.get(mutantPath))
         Files.createDirectories(Paths.get(verifierHarnessPath))
-        println("Processing <${inputPath}> with Dafny path <${dafnyPath}>")
+        println("Processing <${inputPath}> with Dafny path <${dafnyPath}>:")
+        println("Seed: $seed")
+        println("Verbose: $verbose")
+        println("Mutator: $mutator")
         val logger = Logger(File("log.txt"), verbose)
         val seedFiles = inputPath.toFile()
         val dafnyRunner = DafnyRunner(dafnyPath)

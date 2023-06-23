@@ -105,13 +105,23 @@ class MutationHelper(
 
     private fun wrapStatementWithLabel(statements: List<DafnyStatement>): DafnyStatement {
         LABEL_NUM++
-        val updatedStatements = statements.map {
-            if (it.nonLabelStmt is VariableDeclarationStatement) DafnyStatement(
-                null,
-                it.nonLabelStmt.transformToUpdate(),
-                it.nonLabelStmt.stmtSymbolTable
-            ) else it
+        val updatedStatements = mutableListOf<DafnyStatement>()
+        for (statement in statements) {
+            if (statement.nonLabelStmt is VariableDeclarationStatement && statement.nonLabelStmt.rhs.isNotEmpty()) {
+               updatedStatements.add(DafnyStatement(null, statement.nonLabelStmt.transformToUpdate(), statement.nonLabelStmt.stmtSymbolTable))
+            } else if (statement.nonLabelStmt is VariableDeclarationStatement && statement.nonLabelStmt.rhs.isEmpty()) {
+                continue
+            } else {
+                updatedStatements.add(statement.clone())
+            }
         }
+//            statements.map {
+//            if (it.nonLabelStmt is VariableDeclarationStatement && it.nonLabelStmt.rhs.isNotEmpty()) {DafnyStatement(
+//                null,
+//                it.nonLabelStmt.transformToUpdate(),
+//                it.nonLabelStmt.stmtSymbolTable
+//            )} else if (it.nonLabelStmt is VariableDeclarationStatement && it.nonLabelStmt.rhs.isEmpty()) {} else it.clone()
+//        }
         return DafnyStatement(
             label = "label_$LABEL_NUM",
             BlockStatement(updatedStatements.toMutableList(), 9999),
@@ -123,13 +133,24 @@ class MutationHelper(
         statements: List<DafnyStatement>,
     ): DafnyStatement {
         val st = statements[0].stmtSymbolTable!!
-        val updatedStatements = statements.map {
-            if (it.nonLabelStmt is VariableDeclarationStatement) DafnyStatement(
-                null,
-                it.nonLabelStmt.transformToUpdate(),
-                it.nonLabelStmt.stmtSymbolTable
-            ) else it
+        val updatedStatements = mutableListOf<DafnyStatement>()
+        for (statement in statements) {
+            if (statement.nonLabelStmt is VariableDeclarationStatement && statement.nonLabelStmt.rhs.isNotEmpty()) {
+                updatedStatements.add(DafnyStatement(null, statement.nonLabelStmt.transformToUpdate(), statement.nonLabelStmt.stmtSymbolTable))
+            } else if (statement.nonLabelStmt is VariableDeclarationStatement && statement.nonLabelStmt.rhs.isEmpty()) {
+                continue
+            } else {
+                updatedStatements.add(statement.clone())
+            }
         }
+//        val updatedStatements = statements.map {
+//            if (it.nonLabelStmt is VariableDeclarationStatement && it.nonLabelStmt.rhs.isNotEmpty())
+//                DafnyStatement(
+//                null,
+//                it.nonLabelStmt.transformToUpdate(),
+//                it.nonLabelStmt.stmtSymbolTable
+//            ) else it.clone()
+//        }
         val nonLabel = if (rand.nextBoolean()) {
             //true
             val guard = naive.generateBooleanSimplifiedExpression(true, st).toDafnyExpression()

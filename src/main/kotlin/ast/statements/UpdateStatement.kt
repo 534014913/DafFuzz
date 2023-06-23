@@ -6,6 +6,8 @@ import ast.symbolTable.SymbolTable
 import astGenerator.genHavocDafnyExpression
 import walker.DafnyWalker
 
+var lableNum = 0
+
 data class UpdateStatement(
     val hasGets: Boolean,
     val lhss: List<Lhs>,
@@ -13,6 +15,8 @@ data class UpdateStatement(
     override var stmtSymbolTable: SymbolTable? = null
 ) : StatementNode {
     override fun toDafny(): String {
+//        var ret = "label lab_$lableNum:"
+//        lableNum++
         var ret = lhss.joinToString(", ") { x -> x.toDafny() }
         if (hasGets) {
             ret += " := "
@@ -43,6 +47,9 @@ data class UpdateStatement(
     }
 
     fun havocRhs(history: MutableList<String>) {
+//        if (hasGets == false) {
+//            return
+//        }
         if (rhss.size == 1) {
             var h = rhss[0].toDafny()
             rhss = listOf(genHavocDafnyExpression())

@@ -46,18 +46,15 @@ fun pruneHelper(stmt: StatementNode, upBlocks: Set<Int>): StatementNode {
             }
         }
 
-        is ElseSubStatement -> stmt.copy(block = pruneHelper(stmt.block, upBlocks) as BlockStatement)
+        is ElseSubStatement -> stmt.clone()
         is IfStatement -> {
-            stmt.copy(
-                thenClause = pruneHelper(stmt.thenClause, upBlocks) as BlockStatement,
-                elseClause = stmt.elseClause?.let { pruneHelper(it, upBlocks) } as ElseSubStatement
-            )
+            stmt.clone()
         }
-        is AssertStatement -> stmt.copy()
-        is PrintStatement -> stmt.copy()
-        is ReturnStatement -> stmt.copy()
-        is UpdateStatement -> stmt.copy()
-        is VariableDeclarationStatement -> stmt.copy()
+        is AssertStatement -> stmt.clone()
+        is PrintStatement -> stmt.clone()
+        is ReturnStatement -> stmt.clone()
+        is UpdateStatement -> stmt.clone()
+        is VariableDeclarationStatement -> stmt.clone()
         is DafnyStatement -> throw Exception("shouled now visit DafnyStatement")
         else -> throw RuntimeException("${stmt::class} kind should now appear in xdSmith")
     }
